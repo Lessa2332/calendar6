@@ -1,0 +1,175 @@
+// ============================================================
+// WEATHERLAB НУШ — manifest.json (PWA)
+// ============================================================
+{
+    "name": "WeatherLab НУШ — Календар погоди",
+    "short_name": "WeatherLab",
+    "description": "Інтерактивний календар спостережень за погодою для учнів НУШ. Спостерігай, записуй та порівнюй погоду з реальними метеостанціями!",
+    "start_url": "/",
+    "display": "standalone",
+    "display_override": ["standalone", "fullscreen", "minimal-ui"],
+    "orientation": "any",
+    "background_color": "#e3f2fd",
+    "theme_color": "#0277bd",
+    "scope": "/",
+    "lang": "uk",
+    "dir": "ltr",
+    "categories": ["education", "science", "weather", "kids"],
+    
+    "icons": [
+        {
+            "src": "icons/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-192-maskable.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    
+    "screenshots": [
+        {
+            "src": "screenshots/desktop-calendar.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Календар погоди на десктопі"
+        },
+        {
+            "src": "screenshots/mobile-calendar.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Календар погоди на мобільному"
+        },
+        {
+            "src": "screenshots/comparison-view.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Порівняння з реальними даними"
+        }
+    ],
+    
+    "shortcuts": [
+        {
+            "name": "Записати погоду",
+            "short_name": "Записати",
+            "description": "Швидко додати запис погоди на сьогодні",
+            "url": "/?action=record",
+            "icons": [
+                {
+                    "src": "icons/shortcut-record.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Порівняти дані",
+            "short_name": "Порівняти",
+            "description": "Порівняти спостереження з реальною погодою",
+            "url": "/?action=compare",
+            "icons": [
+                {
+                    "src": "icons/shortcut-compare.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Статистика",
+            "short_name": "Статистика",
+            "description": "Переглянути статистику спостережень",
+            "url": "/?action=stats",
+            "icons": [
+                {
+                    "src": "icons/shortcut-stats.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    
+    "share_target": {
+        "action": "/share",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "name",
+            "text": "description"
+        }
+    },
+    
+    "related_applications": [],
+    
+    "prefer_related_applications": false,
+    
+    "protocol_handlers": [
+        {
+            "protocol": "web+weatherlab",
+            "url": "/?data=%s"
+        }
+    ],
+    
+    "edge_side_panel": {
+        "preferred_width": 400
+    },
+    
+    "handle_links": "preferred",
+    
+    "launch_handler": {
+        "client_mode": ["focus-existing", "auto"]
+    }
+}
