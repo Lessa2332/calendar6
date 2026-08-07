@@ -3,994 +3,1347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4fc3f7">
-    <meta name="description" content="Інтерактивний календар погоди для учнів НУШ. Спостерігай, записуй та порівнюй погоду!">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    
-    <title>🌤️ WeatherLab НУШ - Календар погоди для дослідників</title>
-    
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline' https://api.open-meteo.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' data: https:;
-        connect-src 'self' https://api.open-meteo.com https://nominatim.openstreetmap.org;
-    ">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <title>🌤️ Веселий календар погоди для дослідників</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap" rel="stylesheet">
     <style>
-        /* ===== ДИЗАЙН-СИСТЕМА ===== */
         :root {
-            /* Primary palette - WCAG AA compliant */
-            --primary: #0277bd;
-            --primary-light: #4fc3f7;
-            --primary-dark: #01579b;
-            
-            /* Secondary palette */
-            --secondary: #f57c00;
-            --secondary-light: #ffb74d;
-            --secondary-dark: #e65100;
-            
-            /* Semantic colors */
-            --success: #2e7d32;
-            --warning: #f9a825;
-            --error: #c62828;
-            --info: #0288d1;
-            
-            /* Neutral palette */
-            --gray-50: #fafafa;
-            --gray-100: #f5f5f5;
-            --gray-200: #eeeeee;
-            --gray-300: #e0e0e0;
-            --gray-500: #9e9e9e;
-            --gray-700: #616161;
-            --gray-900: #212121;
-            
-            /* Typography */
-            --font-display: 'Bubblegum Sans', cursive;
-            --font-body: 'Open Sans', system-ui, sans-serif;
-            
-            /* Spacing scale */
-            --space-xs: 0.25rem;
-            --space-sm: 0.5rem;
-            --space-md: 1rem;
-            --space-lg: 1.5rem;
-            --space-xl: 2rem;
-            --space-2xl: 3rem;
-            
-            /* Border radius */
-            --radius-sm: 0.5rem;
-            --radius-md: 1rem;
-            --radius-lg: 1.5rem;
-            --radius-xl: 2rem;
-            
-            /* Shadows */
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
-            
-            /* Transitions */
-            --transition-fast: 150ms ease;
-            --transition-base: 300ms ease;
-            
-            /* Layout */
-            --container-max: 1200px;
-            --sidebar-width: 300px;
+            --primary: #4fc3f7;
+            --secondary: #ffd600;
+            --accent: #ff7043;
+            --success: #4caf50;
+            --bg-light: #e3f2fd;
         }
-        
-        /* High contrast mode */
-        @media (prefers-contrast: high) {
-            :root {
-                --primary: #0000ff;
-                --primary-light: #4444ff;
-                --gray-100: #ffffff;
-                --gray-200: #eeeeee;
-            }
-        }
-        
-        /* Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-        
-        /* ===== RESET & BASE ===== */
-        *, *::before, *::after {
+
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
-            font-family: var(--font-body);
+            font-family: 'Bubblegum Sans', cursive;
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             min-height: 100vh;
-            color: var(--gray-900);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
+            padding: 20px;
         }
-        
-        /* ===== ACCESSIBILITY ===== */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0,0,0,0);
-            border: 0;
-        }
-        
-        :focus-visible {
-            outline: 3px solid var(--secondary);
-            outline-offset: 2px;
-            border-radius: var(--radius-sm);
-        }
-        
-        .skip-link {
-            position: absolute;
-            top: -100px;
-            left: 0;
-            background: var(--primary);
-            color: white;
-            padding: var(--space-md);
-            z-index: 10000;
-            transition: top var(--transition-base);
-        }
-        
-        .skip-link:focus {
-            top: 0;
-        }
-        
-        /* ===== LAYOUT ===== */
-        .app-container {
-            max-width: var(--container-max);
+
+        .container {
+            max-width: 1000px;
             margin: 0 auto;
-            padding: var(--space-md);
-            display: grid;
-            gap: var(--space-lg);
-            grid-template-areas:
-                "header"
-                "location"
-                "main"
-                "stats"
-                "methodology"
-                "footer";
         }
-        
-        @media (min-width: 1024px) {
-            .app-container {
-                grid-template-columns: 1fr var(--sidebar-width);
-                grid-template-areas:
-                    "header header"
-                    "location location"
-                    "main stats"
-                    "main methodology"
-                    "footer footer";
-                gap: var(--space-xl);
-            }
-        }
-        
-        /* ===== HEADER ===== */
-        .app-header {
-            grid-area: header;
+
+        .header {
             text-align: center;
-            padding: var(--space-xl);
-            background: rgba(255,255,255,0.9);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            animation: bounce 2s infinite;
         }
-        
-        .app-title {
-            font-family: var(--font-display);
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            color: var(--primary-dark);
-            margin-bottom: var(--space-sm);
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        
-        .app-subtitle {
-            color: var(--gray-700);
-            font-size: 1.1rem;
+
+        h1 {
+            color: #1a237e;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
-        
-        /* Language switcher */
-        .lang-switcher {
-            position: absolute;
-            top: var(--space-md);
-            right: var(--space-md);
-            display: flex;
-            gap: var(--space-xs);
-        }
-        
-        .lang-btn {
-            padding: var(--space-xs) var(--space-sm);
-            border: 2px solid var(--primary-light);
-            background: white;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        }
-        
-        .lang-btn[aria-pressed="true"] {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* ===== LOCATION SELECTOR ===== */
-        .location-panel {
-            grid-area: location;
-            background: white;
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-md);
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-md);
-            align-items: center;
-        }
-        
-        .location-input {
-            flex: 1;
-            min-width: 200px;
-            padding: var(--space-md);
-            border: 2px solid var(--gray-300);
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-family: var(--font-body);
-        }
-        
-        .location-input:focus {
-            border-color: var(--primary-light);
-        }
-        
-        .geo-btn {
-            padding: var(--space-md) var(--space-lg);
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            transition: background var(--transition-fast);
-        }
-        
-        .geo-btn:hover {
-            background: var(--primary-dark);
-        }
-        
-        .geo-btn:disabled {
-            background: var(--gray-300);
-            cursor: not-allowed;
-        }
-        
-        /* ===== CALENDAR ===== */
-        .main-content {
-            grid-area: main;
-        }
-        
-        .month-navigation {
+
+        .month-selector {
             display: flex;
             justify-content: center;
+            gap: 20px;
             align-items: center;
-            gap: var(--space-lg);
-            margin-bottom: var(--space-lg);
+            margin-bottom: 30px;
         }
-        
-        .nav-btn {
-            width: 48px;
-            height: 48px;
+
+        .month-btn {
+            background: var(--primary);
             border: none;
             border-radius: 50%;
-            background: var(--primary-light);
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
             color: white;
-            font-size: 1.5rem;
             cursor: pointer;
-            transition: transform var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: transform 0.3s;
         }
-        
-        .nav-btn:hover {
+
+        .month-btn:hover {
             transform: scale(1.1);
-            background: var(--primary);
         }
-        
+
         .current-month {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-            min-width: 200px;
-            text-align: center;
+            font-size: 28px;
+            color: #1a237e;
+            font-weight: bold;
         }
-        
+
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: var(--space-xs);
-            background: white;
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            box-shadow: var(--shadow-md);
+            gap: 10px;
+            margin-bottom: 40px;
         }
-        
-        .weekday-header {
-            text-align: center;
-            font-weight: 600;
-            color: var(--gray-700);
-            padding: var(--space-sm);
-            font-size: 0.9rem;
-        }
-        
-        .calendar-cell {
+
+        .calendar-day {
             aspect-ratio: 1;
+            background: white;
+            border-radius: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all var(--transition-base);
-            border: 2px solid transparent;
-            font-size: 0.9rem;
+            transition: all 0.3s;
             position: relative;
-            min-width: 44px;
-            min-height: 44px;
-            background: var(--gray-50);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            min-height: 80px;
         }
-        
-        .calendar-cell:hover:not(.future):not(.empty) {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: var(--primary-light);
-            color: white;
+
+        .calendar-day:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
-        
-        .calendar-cell.today {
-            border-color: var(--secondary);
-            background: #fff3e0;
-            font-weight: 700;
+
+        .calendar-day.past {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
         }
-        
-        .calendar-cell.recorded {
-            border-color: var(--success);
-            background: #e8f5e9;
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #fff3e0, #ffcc80);
+            border-color: var(--accent);
+            animation: pulse 2s infinite;
         }
-        
-        .calendar-cell.future {
-            opacity: 0.4;
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .calendar-day.future {
+            background: #f5f5f5;
+            opacity: 0.6;
             cursor: not-allowed;
         }
-        
-        .calendar-cell.empty {
-            background: transparent;
-            cursor: default;
+
+        .calendar-day.recorded {
+            border-color: var(--success);
         }
-        
-        .cell-date {
-            font-weight: 600;
+
+        .day-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
         }
-        
-        .cell-weather {
-            font-size: 1.2rem;
+
+        .weather-icon {
+            font-size: 28px;
+            margin-top: 5px;
         }
-        
-        .cell-temp {
-            font-size: 0.75rem;
-            color: var(--gray-700);
-        }
-        
-        .comparison-indicator {
+
+        .recorded-dot {
             position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 0.7rem;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            border: 2px solid white;
         }
-        
-        /* ===== MODAL ===== */
+
+        /* Modal Styles */
         .modal-overlay {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
             display: none;
-            place-items: center;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(3px);
-            padding: var(--space-md);
+            backdrop-filter: blur(5px);
         }
-        
+
         .modal-content {
             background: white;
-            border-radius: var(--radius-xl);
-            padding: var(--space-xl);
-            width: 100%;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
             max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
             position: relative;
         }
-        
-        .modal-close {
-            position: absolute;
-            top: var(--space-md);
-            right: var(--space-md);
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 18px;
+        }
+
+        .temp-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border: 3px solid var(--primary);
+            border-radius: 15px;
+            font-family: inherit;
+        }
+
+        /* Wind direction selector */
+        .wind-direction-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .wind-direction-btn {
+            aspect-ratio: 1;
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        
-        /* ===== FORM ELEMENTS ===== */
-        .form-group {
-            margin-bottom: var(--space-lg);
+
+        .wind-direction-btn:hover {
+            transform: scale(1.1);
+            background: #f0f8ff;
         }
-        
-        .form-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: var(--space-sm);
-            color: var(--gray-700);
+
+        .wind-direction-btn.selected {
+            border-color: var(--primary);
+            background: #e3f2fd;
         }
-        
-        .form-input {
-            width: 100%;
-            padding: var(--space-md);
-            border: 2px solid var(--gray-300);
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-family: var(--font-body);
-            transition: border-color var(--transition-fast);
-        }
-        
-        .form-input:focus {
-            border-color: var(--primary-light);
-            outline: none;
-        }
-        
-        .form-input[aria-invalid="true"] {
-            border-color: var(--error);
-        }
-        
-        .error-message {
-            color: var(--error);
-            font-size: 0.875rem;
-            margin-top: var(--space-xs);
-            display: none;
-        }
-        
-        .form-input[aria-invalid="true"] + .error-message {
-            display: block;
-        }
-        
-        /* Emoji picker */
-        .emoji-grid {
+
+        .wind-strength-selector {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--space-sm);
+            gap: 10px;
+            margin: 15px 0;
         }
-        
+
+        .wind-strength-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .wind-strength-btn:hover {
+            transform: translateY(-3px);
+            background: #f0f8ff;
+        }
+
+        .wind-strength-btn.selected {
+            border-color: var(--accent);
+            background: #ffe0b2;
+        }
+
+        .wind-speed-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            text-align: center;
+            border: 3px solid #81c784;
+            border-radius: 15px;
+            font-family: inherit;
+        }
+
+        .help-link {
+            display: inline-block;
+            margin-top: 5px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .help-link:hover {
+            text-decoration: underline;
+        }
+
+        .emoji-picker {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
         .emoji-option {
-            font-size: 2rem;
-            padding: var(--space-sm);
-            border: 2px solid var(--gray-300);
-            border-radius: var(--radius-md);
+            font-size: 40px;
+            padding: 10px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all var(--transition-fast);
-            background: white;
-            min-width: 44px;
-            min-height: 44px;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            background: transparent;
         }
-        
+
         .emoji-option:hover {
-            transform: scale(1.1);
-            border-color: var(--primary-light);
+            transform: scale(1.2);
+            background: #f0f8ff;
         }
-        
+
         .emoji-option.selected {
-            border-color: var(--primary);
-            background: #e3f2fd;
-            transform: scale(1.1);
+            border-color: var(--secondary);
+            background: #fffde7;
         }
-        
-        /* Wind selector */
-        .wind-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--space-sm);
+
+        .textarea-note {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border: 3px solid #81d4fa;
+            border-radius: 15px;
+            font-family: inherit;
+            font-size: 16px;
+            resize: vertical;
         }
-        
-        .wind-btn {
-            aspect-ratio: 1;
-            border: 2px solid var(--gray-300);
-            background: white;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: all var(--transition-fast);
-            min-width: 44px;
-            min-height: 44px;
-        }
-        
-        .wind-btn.selected {
-            border-color: var(--primary);
-            background: #e3f2fd;
-        }
-        
-        /* Buttons */
+
         .btn {
-            padding: var(--space-md) var(--space-xl);
+            padding: 15px 30px;
             border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
+            border-radius: 15px;
+            font-family: inherit;
+            font-size: 18px;
             cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 1rem;
-            font-family: var(--font-body);
-            min-height: 44px;
+            transition: all 0.3s;
+            margin: 10px 5px;
         }
-        
+
         .btn-primary {
             background: var(--primary);
             color: white;
         }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
+
         .btn-secondary {
-            background: var(--gray-200);
-            color: var(--gray-900);
+            background: #e0e0e0;
+            color: #333;
         }
-        
-        .btn-danger {
-            background: var(--error);
-            color: white;
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* ===== STATS PANEL ===== */
+
         .stats-panel {
-            grid-area: stats;
             background: white;
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-md);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
-        
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: var(--space-md);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
-        
-        .stat-card {
+
+        .stat-item {
             text-align: center;
-            padding: var(--space-md);
-            background: var(--gray-50);
-            border-radius: var(--radius-md);
+            padding: 15px;
+            background: #f8fdff;
+            border-radius: 15px;
         }
-        
+
         .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 32px;
             color: var(--primary);
+            font-weight: bold;
         }
-        
-        /* ===== COMPARISON TABLE ===== */
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: var(--space-md);
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            justify-content: center;
         }
-        
-        .comparison-table th,
-        .comparison-table td {
-            padding: var(--space-sm) var(--space-md);
-            border: 1px solid var(--gray-300);
-            text-align: left;
-        }
-        
-        .comparison-table th {
-            background: var(--gray-100);
-            font-weight: 600;
-        }
-        
-        .accuracy-good {
-            color: var(--success);
-            font-weight: 600;
-        }
-        
-        .accuracy-fair {
-            color: var(--warning);
-            font-weight: 600;
-        }
-        
-        .accuracy-poor {
-            color: var(--error);
-            font-weight: 600;
-        }
-        
-        /* ===== METHODOLOGY PANEL ===== */
-        .methodology-panel {
-            grid-area: methodology;
-            background: white;
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .methodology-panel h2 {
-            color: var(--primary-dark);
-            margin-bottom: var(--space-md);
-        }
-        
-        .nush-outcomes {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .nush-outcomes li {
-            padding: var(--space-sm) 0;
-            border-bottom: 1px solid var(--gray-200);
-        }
-        
-        .nush-outcomes li:last-child {
-            border-bottom: none;
-        }
-        
-        .outcome-code {
-            font-weight: 700;
-            color: var(--primary);
-        }
-        
-        /* ===== LOADING & STATES ===== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--gray-300);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .skeleton {
-            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: var(--radius-sm);
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* ===== RESPONSIVE ===== */
+
         @media (max-width: 768px) {
             .calendar-grid {
-                gap: 2px;
-                padding: var(--space-xs);
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
             }
             
-            .calendar-cell {
-                font-size: 0.75rem;
-                min-width: 38px;
-                min-height: 38px;
+            .day-number {
+                font-size: 18px;
             }
             
-            .modal-content {
-                padding: var(--space-md);
-                margin: var(--space-sm);
+            .weather-icon {
+                font-size: 20px;
             }
             
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .month-selector {
+                flex-direction: column;
+                gap: 10px;
             }
             
-            .wind-grid {
+            .wind-direction-selector {
                 grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+            
+            .wind-strength-btn {
+                min-width: 80px;
+                font-size: 14px;
             }
         }
-        
-        @media (max-width: 480px) {
-            .app-title {
-                font-size: 1.5rem;
-            }
-            
-            .cell-weather {
-                font-size: 1rem;
-            }
-            
-            .btn {
-                padding: var(--space-sm) var(--space-md);
-                font-size: 0.875rem;
-            }
+
+        /* Achievement badges */
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(45deg, gold, #ffeb3b);
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+            animation: glitter 2s infinite;
+            border: 2px solid #ff9800;
         }
-        
-        /* ===== PRINT STYLES ===== */
-        @media print {
-            .modal-overlay,
-            .nav-btn,
-            .btn,
-            .lang-switcher,
-            .geo-btn {
-                display: none !important;
-            }
-            
-            body {
-                background: white;
-            }
-            
-            .app-container {
-                max-width: 100%;
-            }
-            
-            .calendar-cell {
-                border: 1px solid #000;
-                break-inside: avoid;
-            }
+
+        @keyframes glitter {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Weekday headers */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .weekday {
+            padding: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+        }
+
+        /* Wind icon in calendar */
+        .wind-info {
+            font-size: 14px;
+            margin-top: 2px;
+            color: #666;
+        }
+
+        /* Help panel */
+        .help-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-    <!-- Skip link for accessibility -->
-    <a href="#main-content" class="skip-link">Перейти до основного вмісту</a>
-    
-    <div class="app-container">
-        <!-- Header -->
-        <header class="app-header" role="banner">
-            <h1 class="app-title" data-i18n="appTitle">🌈 WeatherLab НУШ</h1>
-            <p class="app-subtitle" data-i18n="appSubtitle">Інтерактивний календар спостережень за погодою</p>
-            
-            <!-- Language switcher -->
-            <div class="lang-switcher" role="radiogroup" aria-label="Вибір мови">
-                <button class="lang-btn" role="radio" aria-checked="true" aria-pressed="true" 
-                        data-lang="uk" aria-label="Українська мова">🇺🇦 УКР</button>
-                <button class="lang-btn" role="radio" aria-checked="false" aria-pressed="false" 
-                        data-lang="en" aria-label="English language">🇬🇧 EN</button>
-            </div>
-        </header>
-        
-        <!-- Location Selector -->
-        <section class="location-panel" aria-labelledby="location-heading">
-            <h2 id="location-heading" class="sr-only">Вибір локації</h2>
-            <label for="location-input" class="sr-only">Введіть назву міста</label>
-            <input 
-                type="text" 
-                id="location-input" 
-                class="location-input" 
-                placeholder="🏙️ Введіть назву міста..."
-                aria-label="Назва міста для спостереження"
-                data-i18n-placeholder="locationPlaceholder"
-            >
-            <button class="geo-btn" id="geo-btn" aria-label="Визначити моє місцезнаходження">
-                📍 <span data-i18n="detectLocation">Визначити</span>
-            </button>
-            <div id="location-status" aria-live="polite" class="sr-only"></div>
-        </section>
-        
-        <!-- Main Calendar -->
-        <main id="main-content" class="main-content" role="main" aria-label="Календар погоди">
-            <div class="month-navigation">
-                <button class="nav-btn" id="prev-month" aria-label="Попередній місяць">←</button>
-                <h2 class="current-month" id="current-month-label" aria-live="polite">Січень 2026</h2>
-                <button class="nav-btn" id="next-month" aria-label="Наступний місяць">→</button>
-            </div>
-            
-            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Календар на місяць">
-                <!-- Generated dynamically -->
-            </div>
-            
-            <div style="margin-top: var(--space-lg); text-align: center;">
-                <button class="btn btn-primary" id="compare-btn">
-                    🔬 <span data-i18n="compareWithReal">Порівняти з реальними даними</span>
-                </button>
-            </div>
-        </main>
-        
-        <!-- Statistics Panel -->
-        <aside class="stats-panel" aria-labelledby="stats-heading">
-            <h2 id="stats-heading" data-i18n="statistics">📊 Статистика</h2>
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-days">0</div>
-                    <div data-i18n="daysRecorded">днів записано</div>
+    <div class="container">
+        <div class="header">
+            <h1>🌈 Веселий календар погоди 🌈</h1>
+            <p style="font-size: 20px; color: #555;">Ти - маленький метеоролог! Записуй погоду кожного дня!</p>
+        </div>
+
+        <div class="month-selector">
+            <button class="month-btn" onclick="changeMonth(-1)">←</button>
+            <div class="current-month" id="currentMonth">Січень 2026</div>
+            <button class="month-btn" onclick="changeMonth(1)">→</button>
+        </div>
+
+        <div class="weekdays">
+            <div class="weekday">Пн</div>
+            <div class="weekday">Вт</div>
+            <div class="weekday">Ср</div>
+            <div class="weekday">Чт</div>
+            <div class="weekday">Пт</div>
+            <div class="weekday">Сб</div>
+            <div class="weekday">Нд</div>
+        </div>
+
+        <div class="calendar-grid" id="calendar"></div>
+
+        <div class="stats-panel">
+            <h2>📊 Моя статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="daysRecorded">0</div>
+                    <div>Днів записано</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-avg-temp">--°C</div>
-                    <div data-i18n="avgTemp">середня t°</div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgTemp">--°C</div>
+                    <div>Середня температура</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-accuracy">--%</div>
-                    <div data-i18n="accuracy">точність</div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sunnyDays">0</div>
+                    <div>Сонячних днів</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="windyDays">0</div>
+                    <div>Вітряних днів</div>
                 </div>
             </div>
-            
-            <div id="comparison-results" aria-live="polite"></div>
-        </aside>
-        
-        <!-- Methodology Panel -->
-        <section class="methodology-panel" aria-labelledby="methodology-heading">
-            <h2 id="methodology-heading" data-i18n="methodologyPassport">📋 Методичний паспорт</h2>
-            
-            <h3 data-i18n="nushOutcomes">Групи результатів НУШ:</h3>
-            <ul class="nush-outcomes">
-                <li>
-                    <span class="outcome-code">ПРО 1.1</span> - 
-                    <span data-i18n="outcome1">Досліджує об'єкти природи, використовуючи доступні прилади</span>
-                </li>
-                <li>
-                    <span class="outcome-code">ПРО 1.2</span> - 
-                    <span data-i18n="outcome2">Фіксує результати спостережень у різні способи</span>
-                </li>
-                <li>
-                    <span class="outcome-code">ПРО 1.4</span> - 
-                    <span data-i18n="outcome3">Встановлює взаємозв'язки між об'єктами та явищами природи</span>
-                </li>
-                <li>
-                    <span class="outcome-code">ПРО 2.1</span> - 
-                    <span data-i18n="outcome4">Аналізує та порівнює отримані дані</span>
-                </li>
-                <li>
-                    <span class="outcome-code">МАО 2.3</span> - 
-                    <span data-i18n="outcome5">Представляє дані у вигляді таблиць, графіків, діаграм</span>
-                </li>
-            </ul>
-            
-            <h3 style="margin-top: var(--space-lg);" data-i18n="inclusiveAdaptations">Інклюзивні адаптації:</h3>
-            <ul>
-                <li data-i18n="adaptation1">Підтримка екранних читачів (ARIA-мітки)</li>
-                <li data-i18n="adaptation2">Навігація з клавіатури</li>
-                <li data-i18n="adaptation3">Високий контраст (WCAG AA)</li>
-                <li data-i18n="adaptation4">Масштабування до 200%</li>
-                <li data-i18n="adaptation5">Спрощений режим для учнів з ООП</li>
-                <li data-i18n="adaptation6">Альтернативні тексти для всіх зображень</li>
-            </ul>
-        </section>
-        
-        <!-- Footer -->
-        <footer style="grid-area: footer; text-align: center; padding: var(--space-lg);" role="contentinfo">
-            <p>🌍 <span data-i18n="dataSource">Дані з</span> <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a></p>
-            <p data-i18n="version">Версія 2.0 | PWA | WCAG 2.2 AA</p>
-        </footer>
-    </div>
-    
-    <!-- Weather Input Modal -->
-    <div class="modal-overlay" id="weather-modal" role="dialog" aria-modal="true" 
-         aria-labelledby="modal-title" hidden>
-        <div class="modal-content">
-            <button class="modal-close" aria-label="Закрити вікно" id="modal-close">✕</button>
-            
-            <h2 id="modal-title" data-i18n="weatherRecord">Запис погоди</h2>
-            
-            <form id="weather-form" novalidate>
-                <div class="form-group">
-                    <label class="form-label" for="temp-input" data-i18n="temperature">
-                        🌡️ Температура (°C):
-                    </label>
-                    <input 
-                        type="number" 
-                        id="temp-input" 
-                        class="form-input" 
-                        step="0.1" 
-                        placeholder="0.0"
-                        aria-required="true"
-                        aria-describedby="temp-error"
-                        min="-50"
-                        max="50"
-                    >
-                    <div class="error-message" id="temp-error" role="alert">
-                        <span data-i18n="tempError">Введіть температуру від -50 до +50</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" data-i18n="weatherType">☁️ Тип погоди:</label>
-                    <div class="emoji-grid" role="radiogroup" aria-label="Вибір типу погоди" id="weather-picker">
-                        <!-- Generated dynamically -->
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" data-i18n="windInfo">💨 Вітер:</label>
-                    <div class="wind-grid" role="radiogroup" aria-label="Напрям вітру" id="wind-direction-picker">
-                        <!-- Generated dynamically -->
-                    </div>
-                    
-                    <label for="wind-speed" class="form-label" style="margin-top: var(--space-md);" data-i18n="windSpeed">
-                        Швидкість вітру (м/с):
-                    </label>
-                    <input 
-                        type="number" 
-                        id="wind-speed" 
-                        class="form-input" 
-                        step="0.1" 
-                        placeholder="0"
-                        min="0"
-                        max="50"
-                    >
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="notes-input" data-i18n="observations">📝 Спостереження:</label>
-                    <textarea 
-                        id="notes-input" 
-                        class="form-input" 
-                        rows="3" 
-                        placeholder="Що цікавого ти помітив сьогодні?"
-                        maxlength="500"
-                    ></textarea>
-                    <small style="color: var(--gray-500);">
-                        <span data-i18n="charactersLeft">Залишилось символів:</span> 
-                        <span id="char-count">500</span>
-                    </small>
-                </div>
-                
-                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-primary" data-i18n="save">💾 Зберегти</button>
-                    <button type="button" class="btn btn-secondary" id="modal-cancel" data-i18n="cancel">Скасувати</button>
-                    <button type="button" class="btn btn-danger" id="delete-record" data-i18n="delete">🗑️ Видалити</button>
-                </div>
-            </form>
+            <div id="achievements" style="margin-top: 20px;"></div>
+        </div>
+
+        <div class="help-panel">
+            <h2>📚 Довідка для малих метеорологів</h2>
+            <p>Не знаєш, яка сьогодні погода? Хочеш перевірити свої спостереження?</p>
+            <p>📌 Використовуй <a href="https://meteopost.com/weather/archive/" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: bold;">архів погоди на Mетеопост</a> для перевірки!</p>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                На сайті Mетеопост можна подивитися архів погоди за будь-який день. Це допоможе тобі навчитися точніше спостерігати за погодою!
+            </p>
+        </div>
+
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportData()">💾 Зберегти дані</button>
+            <button class="btn btn-primary" onclick="printReport()">🖨️ Друк звіту</button>
+            <button class="btn btn-primary" onclick="shareData()">📤 Поділитися</button>
+            <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Очистити все</button>
         </div>
     </div>
-    
+
+    <!-- Modal for weather input -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitle">Запис погоди</h2>
+                <button onclick="closeModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            
+            <div class="input-group">
+                <label>🌡️ Температура (°C):</label>
+                <input type="number" id="inputTemp" class="temp-input" step="0.1" placeholder="Наприклад: 5.5" min="-50" max="50">
+            </div>
+
+            <div class="input-group">
+                <label>☁️ Яка погода?</label>
+                <div class="emoji-picker" id="weatherPicker">
+                    <div class="emoji-option" data-value="☀️" title="Сонячно">☀️</div>
+                    <div class="emoji-option" data-value="🌤️" title="Мінлива хмарність">🌤️</div>
+                    <div class="emoji-option" data-value="☁️" title="Хмарно">☁️</div>
+                    <div class="emoji-option" data-value="🌧️" title="Дощ">🌧️</div>
+                    <div class="emoji-option" data-value="❄️" title="Сніг">❄️</div>
+                    <div class="emoji-option" data-value="⛈️" title="Гроза">⛈️</div>
+                    <div class="emoji-option" data-value="🌪️" title="Сильний вітер">🌪️</div>
+                    <div class="emoji-option" data-value="🌈" title="Райдуга">🌈</div>
+                </div>
+            </div>
+
+            <!-- НОВІ ПОЛЯ ДЛЯ ВІТРУ -->
+            <div class="input-group">
+                <label>💨 Вітер:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div style="margin-bottom: 10px;">
+                            <label>Напрям вітру:</label>
+                            <a href="https://meteopost.com/weather/archive/" target="_blank" class="help-link">(як визначити?)</a>
+                        </div>
+                        <div class="wind-direction-selector" id="windDirectionPicker">
+                            <button class="wind-direction-btn" data-value="Пн" title="Північний">↑</button>
+                            <button class="wind-direction-btn" data-value="Пд" title="Південний">↓</button>
+                            <button class="wind-direction-btn" data-value="Зх" title="Західний">←</button>
+                            <button class="wind-direction-btn" data-value="Сх" title="Східний">→</button>
+                            <button class="wind-direction-btn" data-value="ПнЗх" title="Північно-західний">↖</button>
+                            <button class="wind-direction-btn" data-value="ПнСх" title="Північно-східний">↗</button>
+                            <button class="wind-direction-btn" data-value="ПдЗх" title="Південно-західний">↙</button>
+                            <button class="wind-direction-btn" data-value="ПдСх" title="Південно-східний">↘</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label>Сила вітру:</label>
+                        <div class="wind-strength-selector" id="windStrengthPicker">
+                            <button class="wind-strength-btn" data-value="Слабкий">Слабкий</button>
+                            <button class="wind-strength-btn" data-value="Помірний">Помірний</button>
+                            <button class="wind-strength-btn" data-value="Сильний">Сильний</button>
+                            <button class="wind-strength-btn" data-value="Шторм">Шторм</button>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label>Швидкість (м/с):</label>
+                            <input type="number" id="windSpeed" class="wind-speed-input" 
+                                   placeholder="0-20 м/с" min="0" max="50" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>😊 Який твій настрій сьогодні?</label>
+                <div class="emoji-picker" id="moodPicker">
+                    <div class="emoji-option" data-value="😀" title="Щасливий">😀</div>
+                    <div class="emoji-option" data-value="😊" title="Задоволений">😊</div>
+                    <div class="emoji-option" data-value="😐" title="Нейтральний">😐</div>
+                    <div class="emoji-option" data-value="😢" title="Сумний">😢</div>
+                    <div class="emoji-option" data-value="🤩" title="Радісний">🤩</div>
+                    <div class="emoji-option" data-value="🥱" title="Втомлений">🥱</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>📝 Мої спостереження:</label>
+                <textarea id="inputNotes" class="textarea-note" 
+                          placeholder="Що цікавого ти помітив сьогодні? Які пташки прилітали? Як змінилася природа?"></textarea>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn btn-primary" onclick="saveWeatherData()">💾 Зберегти запис</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Скасувати</button>
+                <button class="btn btn-secondary" onclick="deleteDayData()" style="background: #ff5252; color: white;">🗑️ Видалити запис</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ===== SERVICE WORKER REGISTRATION =====
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => {
-                    console.log('ServiceWorker registration failed:', err);
+        // Current date management
+        let currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth();
+        let selectedDay = null;
+
+        // Days of week in Ukrainian
+        const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+        const monthNames = [
+            "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+            "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+        ];
+        const monthNamesGenitive = [
+            "січня", "лютого", "березня", "квітня", "травня", "червня",
+            "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"
+        ];
+
+        // Wind direction names
+        const windDirectionNames = {
+            'Пн': 'Північний',
+            'Пд': 'Південний',
+            'Зх': 'Західний',
+            'Сх': 'Східний',
+            'ПнЗх': 'Північно-західний',
+            'ПнСх': 'Північно-східний',
+            'ПдЗх': 'Південно-західний',
+            'ПдСх': 'Південно-східний'
+        };
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all pickers
+            initEmojiPickers();
+            initWindDirectionPicker();
+            initWindStrengthPicker();
+            
+            // Load initial data
+            updateCalendar();
+            updateStats();
+            checkAchievements();
+            
+            // Add keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        });
+
+        function initEmojiPickers() {
+            document.querySelectorAll('.emoji-picker').forEach(picker => {
+                picker.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('emoji-option')) {
+                        const parent = e.target.parentElement;
+                        parent.querySelectorAll('.emoji-option').forEach(option => {
+                            option.classList.remove('selected');
+                        });
+                        e.target.classList.add('selected');
+                    }
                 });
             });
         }
-        
-        // ===== APP CORE =====
-        class WeatherLabApp {
-            constructor() {
-                this.currentDate = new Date();
-                this.currentYear = this.currentDate.getFullYear();
-                this.currentMonth = this.currentDate.getMonth();
-                this.selectedDay = null;
-                this.currentLang = 'uk';
-                this.userLocation = null;
-                this.realWeatherData = null;
+
+        function initWindDirectionPicker() {
+            const picker = document.getElementById('windDirectionPicker');
+            picker.addEventListener('click', function(e) {
+                if (e.target.classList.contains('wind-direction-btn')) {
+                    picker.querySelectorAll('.wind-direction-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    e.target.classList.add('selected');
+                }
+            });
+        }
+
+        function initWindStrengthPicker() {
+            const picker = document.getElementById('windStrengthPicker');
+            picker.addEventListener('click', function(e) {
+                if (e.target.classList.contains('wind-strength-btn')) {
+                    picker.querySelectorAll('.wind-strength-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    e.target.classList.add('selected');
+                }
+            });
+        }
+
+        function updateCalendar() {
+            document.getElementById('currentMonth').textContent = 
+                `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+            
+            // Adjust for Ukrainian week (Monday is first day)
+            let startOffset = firstDay === 0 ? 6 : firstDay - 1;
+            
+            // Add empty cells for days before the first day of month
+            for (let i = 0; i < startOffset; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.style.visibility = 'hidden';
+                calendar.appendChild(emptyCell);
+            }
+            
+            // Add day cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
                 
-                // i18n strings
-                this.i18n = {
-                    uk: {
-                        appTitle: '🌈 WeatherLab НУШ',
-                        appSubtitle: 'Інтерактивний календар спостережень за погодою',
-                        locationPlaceholder: '🏙️ Введі
+                const cellDate = new Date(currentYear, currentMonth, day);
+                const dataKey = `weather_${currentYear}_${currentMonth}_${day}`;
+                const savedData = localStorage.getItem(dataKey);
+                
+                let dayContent = `<div class="day-number">${day}</div>`;
+                
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        dayContent += `<div class="weather-icon">${data.weather}</div>`;
+                        
+                        // Add wind info if available
+                        if (data.windDirection) {
+                            let windSymbol = '';
+                            switch(data.windDirection) {
+                                case 'Пн': windSymbol = '↑'; break;
+                                case 'Пд': windSymbol = '↓'; break;
+                                case 'Зх': windSymbol = '←'; break;
+                                case 'Сх': windSymbol = '→'; break;
+                                case 'ПнЗх': windSymbol = '↖'; break;
+                                case 'ПнСх': windSymbol = '↗'; break;
+                                case 'ПдЗх': windSymbol = '↙'; break;
+                                case 'ПдСх': windSymbol = '↘'; break;
+                            }
+                            if (windSymbol) {
+                                dayContent += `<div class="wind-info">${windSymbol} ${data.windSpeed || ''}м/с</div>`;
+                            }
+                        }
+                        
+                        dayElement.classList.add('recorded');
+                    } catch (e) {
+                        console.error('Error parsing saved data:', e);
+                    }
+                }
+                
+                dayElement.innerHTML = dayContent;
+                
+                if (isCurrentMonth && day === today.getDate()) {
+                    dayElement.classList.add('today');
+                } else if (cellDate < today) {
+                    dayElement.classList.add('past');
+                } else {
+                    dayElement.classList.add('future');
+                }
+                
+                // Only allow clicks on past/today days or if already has data
+                if (cellDate <= today || savedData) {
+                    dayElement.onclick = () => openWeatherModal(day);
+                    dayElement.style.cursor = 'pointer';
+                } else {
+                    dayElement.style.cursor = 'not-allowed';
+                }
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendar();
+            updateStats();
+        }
+
+        function openWeatherModal(day) {
+            selectedDay = day;
+            const modalTitle = document.getElementById('modalTitle');
+            modalTitle.textContent = `${day} ${monthNamesGenitive[currentMonth]} ${currentYear}`;
+            
+            const dataKey = `weather_${currentYear}_${currentMonth}_${day}`;
+            const savedData = localStorage.getItem(dataKey);
+            
+            // Reset all selections first
+            document.querySelectorAll('.emoji-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelectorAll('.wind-direction-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelectorAll('.wind-strength-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    document.getElementById('inputTemp').value = data.temp;
+                    document.getElementById('inputNotes').value = data.notes || '';
+                    document.getElementById('windSpeed').value = data.windSpeed || '';
+                    
+                    // Select saved weather emoji
+                    if (data.weather) {
+                        const weatherOption = document.querySelector(`#weatherPicker .emoji-option[data-value="${data.weather}"]`);
+                        if (weatherOption) {
+                            weatherOption.classList.add('selected');
+                        }
+                    }
+                    
+                    // Select saved mood emoji
+                    if (data.mood) {
+                        const moodOption = document.querySelector(`#moodPicker .emoji-option[data-value="${data.mood}"]`);
+                        if (moodOption) {
+                            moodOption.classList.add('selected');
+                        }
+                    }
+                    
+                    // Select saved wind direction
+                    if (data.windDirection) {
+                        const windDirOption = document.querySelector(`#windDirectionPicker .wind-direction-btn[data-value="${data.windDirection}"]`);
+                        if (windDirOption) {
+                            windDirOption.classList.add('selected');
+                        }
+                    }
+                    
+                    // Select saved wind strength
+                    if (data.windStrength) {
+                        const windStrOption = document.querySelector(`#windStrengthPicker .wind-strength-btn[data-value="${data.windStrength}"]`);
+                        if (windStrOption) {
+                            windStrOption.classList.add('selected');
+                        }
+                    }
+                    
+                } catch (e) {
+                    console.error('Error parsing saved data:', e);
+                    // Clear invalid data
+                    localStorage.removeItem(dataKey);
+                }
+            } else {
+                document.getElementById('inputTemp').value = '';
+                document.getElementById('inputNotes').value = '';
+                document.getElementById('windSpeed').value = '';
+                
+                // Set default selections
+                document.querySelector('#weatherPicker .emoji-option[data-value="☀️"]').classList.add('selected');
+                document.querySelector('#moodPicker .emoji-option[data-value="😊"]').classList.add('selected');
+                document.querySelector('#windDirectionPicker .wind-direction-btn[data-value="Пн"]').classList.add('selected');
+                document.querySelector('#windStrengthPicker .wind-strength-btn[data-value="Слабкий"]').classList.add('selected');
+            }
+            
+            document.getElementById('modalOverlay').style.display = 'flex';
+            document.getElementById('inputTemp').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function closeModalOnOverlay(event) {
+            if (event.target.id === 'modalOverlay') {
+                closeModal();
+            }
+        }
+
+        function saveWeatherData() {
+            const tempInput = document.getElementById('inputTemp');
+            const temp = tempInput.value.trim();
+            
+            if (!temp) {
+                alert('Будь ласка, вкажи температуру!');
+                tempInput.focus();
+                return;
+            }
+            
+            const tempNum = parseFloat(temp);
+            if (isNaN(tempNum) || tempNum < -50 || tempNum > 50) {
+                alert('Температура повинна бути числом між -50°C та 50°C!');
+                tempInput.focus();
+                return;
+            }
+            
+            const weatherOption = document.querySelector('#weatherPicker .emoji-option.selected');
+            const moodOption = document.querySelector('#moodPicker .emoji-option.selected');
+            const windDirOption = document.querySelector('#windDirectionPicker .wind-direction-btn.selected');
+            const windStrOption = document.querySelector('#windStrengthPicker .wind-strength-btn.selected');
+            
+            if (!weatherOption || !moodOption || !windDirOption || !windStrOption) {
+                alert('Будь ласка, заповни всі поля!');
+                return;
+            }
+            
+            const windSpeedInput = document.getElementById('windSpeed');
+            const windSpeed = windSpeedInput.value.trim();
+            let windSpeedNum = null;
+            
+            if (windSpeed) {
+                windSpeedNum = parseFloat(windSpeed);
+                if (isNaN(windSpeedNum) || windSpeedNum < 0 || windSpeedNum > 50) {
+                    alert('Швидкість вітру повинна бути числом від 0 до 50 м/с!');
+                    windSpeedInput.focus();
+                    return;
+                }
+            }
+            
+            const weather = weatherOption.dataset.value;
+            const mood = moodOption.dataset.value;
+            const windDirection = windDirOption.dataset.value;
+            const windStrength = windStrOption.dataset.value;
+            const notes = document.getElementById('inputNotes').value.trim();
+            
+            const data = {
+                temp: tempNum,
+                weather: weather,
+                mood: mood,
+                windDirection: windDirection,
+                windDirectionName: windDirectionNames[windDirection],
+                windStrength: windStrength,
+                windSpeed: windSpeedNum,
+                notes: notes,
+                timestamp: new Date().toISOString(),
+                date: `${selectedDay}.${currentMonth + 1}.${currentYear}`
+            };
+            
+            const dataKey = `weather_${currentYear}_${currentMonth}_${selectedDay}`;
+            try {
+                localStorage.setItem(dataKey, JSON.stringify(data));
+                console.log('Data saved:', dataKey, data);
+                
+                // Update calendar and stats
+                updateCalendar();
+                updateStats();
+                checkAchievements();
+                
+                // Show success message
+                alert(`✅ Дані за ${selectedDay} ${monthNamesGenitive[currentMonth]} успішно збережено!\n\nВітер: ${windDirectionNames[windDirection]}, ${windStrength}, ${windSpeedNum ? windSpeedNum + ' м/с' : 'не вказано'}`);
+                
+                closeModal();
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+                alert('Помилка збереження. Перевірте налаштування браузера.');
+            }
+        }
+
+        function deleteDayData() {
+            if (!confirm(`Видалити запис за ${selectedDay} ${monthNamesGenitive[currentMonth]}?`)) {
+                return;
+            }
+            
+            const dataKey = `weather_${currentYear}_${currentMonth}_${selectedDay}`;
+            localStorage.removeItem(dataKey);
+            
+            updateCalendar();
+            updateStats();
+            checkAchievements();
+            
+            alert(`✅ Запис за ${selectedDay} ${monthNamesGenitive[currentMonth]} видалено!`);
+            closeModal();
+        }
+
+        function updateStats() {
+            let totalTemp = 0;
+            let count = 0;
+            let sunnyDays = 0;
+            let windyDays = 0;
+            let recordedDays = 0;
+            let currentStreak = 0;
+            let tempStreak = 0;
+            let today = new Date();
+            
+            // Calculate stats for current month
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dataKey = `weather_${currentYear}_${currentMonth}_${day}`;
+                const savedData = localStorage.getItem(dataKey);
+                
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        totalTemp += data.temp;
+                        count++;
+                        recordedDays++;
+                        
+                        if (data.weather === '☀️') sunnyDays++;
+                        
+                        // Check for windy days
+                        if (data.windStrength === 'Сильний' || data.windStrength === 'Шторм' || 
+                            data.weather === '🌪️') {
+                            windyDays++;
+                        }
+                        
+                        // Check streak (only for current month)
+                        const date = new Date(currentYear, currentMonth, day);
+                        if (date <= today) {
+                            tempStreak++;
+                            currentStreak = Math.max(currentStreak, tempStreak);
+                        } else {
+                            tempStreak = 0;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing data for stats:', e);
+                    }
+                } else {
+                    tempStreak = 0;
+                }
+            }
+            
+            // Update display
+            document.getElementById('daysRecorded').textContent = recordedDays;
+            document.getElementById('sunnyDays').textContent = sunnyDays;
+            document.getElementById('windyDays').textContent = windyDays;
+            
+            if (count > 0) {
+                const avgTemp = totalTemp / count;
+                document.getElementById('avgTemp').textContent = `${avgTemp.toFixed(1)}°C`;
+            } else {
+                document.getElementById('avgTemp').textContent = '--°C';
+            }
+        }
+
+        function checkAchievements() {
+            const achievements = [];
+            const weatherKeys = Object.keys(localStorage).filter(key => key.startsWith('weather_'));
+            const totalDays = weatherKeys.length;
+            
+            if (totalDays >= 3) achievements.push('🌱 Новачок метеоролог');
+            if (totalDays >= 7) achievements.push('⭐ Початківець спостерігач');
+            if (totalDays >= 15) achievements.push('🏆 Досвідчений метеоролог');
+            if (totalDays >= 30) achievements.push('👑 Професійний кліматолог');
+            
+            // Check for specific weather patterns
+            let rainyDays = 0;
+            let snowyDays = 0;
+            let rainbowDays = 0;
+            let windyDays = 0;
+            let stormDays = 0;
+            
+            weatherKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (data.weather === '🌧️') rainyDays++;
+                    if (data.weather === '❄️') snowyDays++;
+                    if (data.weather === '🌈') rainbowDays++;
+                    if (data.weather === '🌪️') windyDays++;
+                    if (data.windStrength === 'Шторм') stormDays++;
+                } catch (e) {
+                    console.error('Error parsing achievement data:', e);
+                }
+            });
+            
+            if (rainyDays >= 3) achievements.push('☔ Дощовий експерт');
+            if (snowyDays >= 2) achievements.push('❄️ Зимовий дослідник');
+            if (rainbowDays >= 1) achievements.push('🌈 Знайшов скарб');
+            if (windyDays >= 3) achievements.push('💨 Дослідник вітрів');
+            if (stormDays >= 1) achievements.push('⚡ Штурмовик');
+            
+            // Check for consecutive days
+            if (weatherKeys.length >= 5) {
+                achievements.push('📅 Старанний спостерігач');
+            }
+            
+            // Update achievements display
+            const achievementsDiv = document.getElementById('achievements');
+            if (achievements.length > 0) {
+                achievementsDiv.innerHTML = '<h3>🏆 Мої досягнення:</h3>';
+                achievements.forEach(achievement => {
+                    achievementsDiv.innerHTML += `<span class="badge">${achievement}</span>`;
+                });
+            } else {
+                achievementsDiv.innerHTML = '<p style="color: #666;">Заповнюй календар щодня, щоб отримати досягнення! ✨</p>';
+            }
+        }
+
+        function exportData() {
+            const allData = {};
+            const weatherKeys = Object.keys(localStorage).filter(key => key.startsWith('weather_'));
+            
+            if (weatherKeys.length === 0) {
+                alert('Немає даних для експорту!');
+                return;
+            }
+            
+            weatherKeys.sort().forEach(key => {
+                try {
+                    allData[key] = JSON.parse(localStorage.getItem(key));
+                } catch (e) {
+                    console.error('Error parsing data for export:', e);
+                }
+            });
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `weather_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ Дані успішно експортовано! Завантажено ${weatherKeys.length} записів.`);
+        }
+
+        function printReport() {
+            const monthNames = [
+                "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+                "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+            ];
+            
+            let report = `
+                <html>
+                <head>
+                    <title>Звіт про спостереження за погодою</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #1a237e; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        th { background-color: #f5f5f5; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .stats { background: #f8fdff; padding: 15px; border-radius: 10px; margin: 20px 0; }
+                        .wind-info { font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📋 Звіт про спостереження за погодою</h1>
+                        <h2>${monthNames[currentMonth]} ${currentYear}</h2>
+                        <p>📌 Використано довідковий сайт: <a href="https://meteopost.com/weather/archive/">Mетеопост архів погоди</a></p>
+                    </div>
+            `;
+            
+            // Add statistics
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let recordedDays = 0;
+            let totalTemp = 0;
+            
+            report += `<div class="stats"><h3>Статистика за місяць:</h3>`;
+            
+            let tableContent = `
+                <table>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Температура</th>
+                        <th>Погода</th>
+                        <th>Вітер</th>
+                        <th>Настрій</th>
+                        <th>Спостереження</th>
+                    </tr>
+            `;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dataKey = `weather_${currentYear}_${currentMonth}_${day}`;
+                const savedData = localStorage.getItem(dataKey);
+                
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        recordedDays++;
+                        totalTemp += data.temp;
+                        
+                        // Format wind info
+                        let windInfo = '';
+                        if (data.windDirection && data.windStrength) {
+                            windInfo = `${data.windDirectionName || data.windDirection}`;
+                            if (data.windSpeed) {
+                                windInfo += `, ${data.windStrength}, ${data.windSpeed} м/с`;
+                            } else {
+                                windInfo += `, ${data.windStrength}`;
+                            }
+                        }
+                        
+                        tableContent += `
+                            <tr>
+                                <td>${day}.${currentMonth + 1}.${currentYear}</td>
+                                <td>${data.temp}°C</td>
+                                <td>${data.weather}</td>
+                                <td><span class="wind-info">${windInfo}</span></td>
+                                <td>${data.mood}</td>
+                                <td>${data.notes || ''}</td>
+                            </tr>
+                        `;
+                    } catch (e) {
+                        console.error('Error parsing data for print:', e);
+                    }
+                }
+            }
+            
+            if (recordedDays > 0) {
+                const avgTemp = totalTemp / recordedDays;
+                report += `<p>Записано днів: ${recordedDays}</p>`;
+                report += `<p>Середня температура: ${avgTemp.toFixed(1)}°C</p>`;
+            } else {
+                report += `<p>Немає записаних даних за цей місяць.</p>`;
+            }
+            
+            report += `</div>`;
+            
+            if (recordedDays > 0) {
+                report += tableContent + `</table>`;
+            }
+            
+            report += `
+                    <p style="margin-top: 30px; font-style: italic; color: #666;">
+                        Звіт створено за допомогою Веселого календаря погоди 🌈
+                    </p>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(report);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+
+        function shareData() {
+            const monthNames = [
+                "січня", "лютого", "березня", "квітня", "травня", "червня",
+                "липень", "серпень", "вересня", "жовтня", "листопада", "грудня"
+            ];
+            
+            let summary = `Мої спостереження за погодою за ${monthNames[currentMonth]} ${currentYear}:\n\n`;
+            
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let recordedCount = 0;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dataKey = `weather_${currentYear}_${currentMonth}_${day}`;
+                const savedData = localStorage.getItem(dataKey);
+                
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        recordedCount++;
+                        
+                        // Add wind info to summary
+                        let windInfo = '';
+                        if (data.windDirection && data.windStrength) {
+                            windInfo = `, вітер: ${data.windDirectionName || data.windDirection} ${data.windStrength}`;
+                            if (data.windSpeed) {
+                                windInfo += ` (${data.windSpeed} м/с)`;
+                            }
+                        }
+                        
+                        summary += `${day}.${currentMonth + 1}: ${data.weather} ${data.temp}°C ${data.mood}${windInfo}\n`;
+                    } catch (e) {
+                        console.error('Error parsing data for share:', e);
+                    }
+                }
+            }
+            
+            if (recordedCount === 0) {
+                alert('Немає даних для обміну!');
+                return;
+            }
+            
+            summary += `\nВсього записано: ${recordedCount} днів\n`;
+            summary += `📊 Перевір свої спостереження: https://meteopost.com/weather/archive/`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Мої спостереження за погодою',
+                    text: summary,
+                    url: window.location.href
+                }).catch(err => {
+                    console.log('Share cancelled:', err);
+                    fallbackShare(summary);
+                });
+            } else {
+                fallbackShare(summary);
+            }
+        }
+
+        function fallbackShare(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 Дані скопійовано до буферу обміну! Тепер можеш поділитися ними.\n\n' + text.substring(0, 200) + '...');
+            }).catch(err => {
+                alert('Текст готовий для копіювання:\n\n' + text);
+            });
+        }
+
+        function clearAllData() {
+            if (!confirm('УВАГА! Це видалить ВСІ ваші записи. Продовжити?')) {
+                return;
+            }
+            
+            const weatherKeys = Object.keys(localStorage).filter(key => key.startsWith('weather_'));
+            weatherKeys.forEach(key => localStorage.removeItem(key));
+            
+            updateCalendar();
+            updateStats();
+            checkAchievements();
+            
+            alert(`✅ Видалено ${weatherKeys.length} записів!`);
+        }
+    </script>
+</body>
+</html>
