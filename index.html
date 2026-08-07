@@ -22,7 +22,8 @@
     <style>
         :root {
             --primary: #0277bd; --primary-light: #4fc3f7; --primary-dark: #01579b;
-            --secondary: #f57c00; --success: #2e7d32; --warning: #f9a825; --error: #c62828;
+            --secondary: #f57c00; --secondary-light: #ffb74d;
+            --success: #2e7d32; --warning: #f9a825; --error: #c62828;
             --gray-50: #fafafa; --gray-100: #f5f5f5; --gray-200: #eeeeee; --gray-300: #e0e0e0;
             --gray-500: #9e9e9e; --gray-700: #616161; --gray-900: #212121;
             --font-display: 'Bubblegum Sans', cursive;
@@ -53,6 +54,12 @@
         body.high-contrast { --primary: #0000ff; background: #ffffff; }
         body.large-text { font-size: 1.25rem; }
         body.dyslexic-font { font-family: 'OpenDyslexic', 'Open Sans', sans-serif; }
+        body.simplified .app-subtitle,
+        body.simplified .methodology-panel,
+        body.simplified .weather-window,
+        body.simplified .stats-panel .stat-label { display: none; }
+        body.simplified .calendar-cell { font-size: 1.2rem; }
+        body.simplified .btn { font-size: 1.1rem; padding: 1rem 2rem; }
         
         .sr-only {
             position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -193,14 +200,37 @@
         .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
         .stat-label { font-size: 0.75rem; color: var(--gray-700); }
         
-        /* Weather iframe window */
         .weather-window {
             background: white; border-radius: var(--radius-lg); padding: var(--space-lg);
             box-shadow: var(--shadow-lg); margin-top: var(--space-lg);
         }
-        .weather-window h3 { color: var(--primary-dark); margin-bottom: var(--space-md); }
         .weather-window iframe {
-            width: 100%; height: 400px; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+            width: 100%; height: 350px; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+        }
+        
+        /* AVATAR SECTION */
+        .avatar-section {
+            display: flex; align-items: center; gap: var(--space-md);
+        }
+        .avatar-display {
+            font-size: 3rem; cursor: pointer; transition: transform var(--transition-fast);
+            min-width: 60px; text-align: center;
+        }
+        .avatar-display:hover { transform: scale(1.2); }
+        .avatar-picker-popup {
+            display: none; position: absolute; background: white; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl); padding: var(--space-md); z-index: 100;
+            grid-template-columns: repeat(4, 1fr); gap: var(--space-sm);
+            max-width: 280px;
+        }
+        .avatar-picker-popup.show { display: grid; }
+        .avatar-option-popup {
+            font-size: 2rem; padding: var(--space-xs); border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md); cursor: pointer; text-align: center;
+            transition: all var(--transition-fast); background: white;
+        }
+        .avatar-option-popup:hover, .avatar-option-popup.selected {
+            border-color: var(--primary); background: #e3f2fd; transform: scale(1.1);
         }
         
         /* Modal */
@@ -260,16 +290,28 @@
             background: rgba(255,255,255,0.7); border-radius: var(--radius-lg); font-size: 0.85rem;
         }
         
+        /* BADGES */
+        .badge-popup {
+            position: fixed; top: var(--space-xl); right: var(--space-xl); z-index: 1500;
+            background: linear-gradient(135deg, #ffd700, #ffab00); color: #333;
+            padding: var(--space-md) var(--space-lg); border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl); font-weight: 700;
+            animation: badgeIn 0.5s ease;
+            display: flex; align-items: center; gap: var(--space-sm);
+        }
+        @keyframes badgeIn { from { transform: translateX(100%); opacity: 0; } }
+        
         @media (max-width: 768px) {
             .calendar-cell { font-size: 0.7rem; min-width: 38px; min-height: 38px; }
             .cell-emoji { font-size: 0.9rem; }
             .btn { padding: var(--space-sm) var(--space-md); font-size: 0.85rem; }
             .weather-window iframe { height: 250px; }
+            .badge-popup { top: auto; bottom: var(--space-xl); right: var(--space-md); left: var(--space-md); }
         }
         @media print {
             .skip-link, .modal-overlay, .nav-btn, .btn, .lang-switcher, .geo-btn,
             .a11y-panel, .student-panel, .location-panel, .action-buttons,
-            .weather-window, .toast { display: none !important; }
+            .weather-window, .toast, .badge-popup, .avatar-picker-popup { display: none !important; }
             body { background: white; }
         }
     </style>
@@ -312,9 +354,19 @@
             <span id="location-status" style="font-weight:600;" aria-live="polite"></span>
         </section>
         
-        <!-- STUDENT INFO -->
-        <section class="panel student-panel" aria-labelledby="stu-label">
+        <!-- STUDENT INFO + AVATAR -->
+        <section class="panel student-panel" aria-labelledby="stu-label" style="position:relative;">
             <span id="stu-label" style="font-size:1.3rem;">🧑‍🔬</span>
+            
+            <!-- АВАТАР -->
+            <div class="avatar-section">
+                <div class="avatar-display" id="avatar-display" 
+                     onclick="app.toggleAvatarPicker()" 
+                     tabindex="0" role="button" 
+                     aria-label="Обрати аватар">🦊</div>
+                <div class="avatar-picker-popup" id="avatar-picker-popup"></div>
+            </div>
+            
             <input type="text" id="student-name" class="input student-input" 
                    placeholder="Ім'я та прізвище" aria-label="Ім'я учня">
             <input type="text" id="student-class" class="input student-input" 
@@ -368,15 +420,19 @@
                 <div class="stat-card"><div class="stat-emoji">🎯</div><div class="stat-value" id="stat-accuracy">--%</div><div class="stat-label" id="stat-acc-label">точність</div></div>
             </div>
             
-            <!-- WEATHER IFRAME WINDOW -->
-            <div class="weather-window" style="margin-top:var(--space-lg);">
+            <!-- ДОСЯГНЕННЯ -->
+            <div style="margin-top:var(--space-lg);">
+                <h3>🏆 <span id="badges-title">Мої досягнення</span></h3>
+                <div id="badges-container" style="display:flex;flex-wrap:wrap;gap:var(--space-sm);margin-top:var(--space-sm);"></div>
+            </div>
+            
+            <!-- WEATHER IFRAME -->
+            <div class="weather-window">
                 <h3>🌐 <span id="weather-window-title">Реальна погода у твоєму місті</span></h3>
-                <iframe id="weather-iframe" 
-                        src="about:blank"
+                <iframe id="weather-iframe" src="about:blank"
                         title="Реальна погода" 
                         sandbox="allow-scripts allow-same-origin allow-popups"
-                        loading="lazy">
-                </iframe>
+                        loading="lazy"></iframe>
                 <p style="font-size:0.75rem;color:var(--gray-500);margin-top:var(--space-xs);">
                     <span id="weather-source-text">Дані з</span> 
                     <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> | 
@@ -403,7 +459,7 @@
         </section>
         
         <footer class="app-footer" role="contentinfo">
-            <p>🌈 WeatherLab НУШ v2.2 • PWA • WCAG 2.2 AA • 5-6 класи</p>
+            <p>🌈 WeatherLab НУШ v2.3 • PWA • WCAG 2.2 AA • 5-6 класи</p>
         </footer>
     </div>
     
@@ -460,101 +516,69 @@
     
     <script>
     // ============================================================
-    // WEATHERLAB НУШ v2.2 — З ІНКЛЮЗІЄЮ, EN/UK, IFRAME ПОГОДОЮ
+    // WEATHERLAB НУШ v2.3 — З АВАТАРАМИ, ДОСЯГНЕННЯМИ, UK/EN, ІНКЛЮЗІЄЮ
     // ============================================================
     
     const L = {
         uk: {
-            appTitle: '🌈 WeatherLab НУШ',
-            appSubtitle: '🌍 Метеорологічний календар • Географія • 5-6 класи',
-            geoText: 'Визначити геолокацію',
-            saveText: 'Зберегти',
-            todayText: 'Сьогодні',
-            compareText: 'Порівняти з реальними даними',
-            pdfText: 'Створити звіт (PDF)',
-            saveReportText: 'Зберегти звіт CSV',
-            printText: 'Друк',
+            appTitle: '🌈 WeatherLab НУШ', appSubtitle: '🌍 Метеорологічний календар • Географія • 5-6 класи',
+            geoText: 'Визначити геолокацію', saveText: 'Зберегти', todayText: 'Сьогодні',
+            compareText: 'Порівняти з реальними даними', pdfText: 'Створити звіт (PDF)',
+            saveReportText: 'Зберегти звіт CSV', printText: 'Друк',
             statsTitle: 'Статистика місяця',
-            statDaysLabel: 'днів',
-            statTempLabel: 'середня t°',
-            statSunnyLabel: 'сонячних',
-            statWindyLabel: 'вітряних',
-            statStreakLabel: 'днів підряд',
-            statAccLabel: 'точність',
-            weatherWindowTitle: 'Реальна погода у твоєму місті',
-            weatherSourceText: 'Дані з',
+            statDaysLabel: 'днів', statTempLabel: 'середня t°', statSunnyLabel: 'сонячних',
+            statWindyLabel: 'вітряних', statStreakLabel: 'днів підряд', statAccLabel: 'точність',
+            badgesTitle: 'Мої досягнення',
+            weatherWindowTitle: 'Реальна погода у твоєму місті', weatherSourceText: 'Дані з',
             methodTitle: '📋 НУШ 5-6 класи',
             methodSubjects: '<strong>Предмети:</strong> 🌍 Географія • 🔬 Природничі науки',
             a11yInfo: 'WCAG 2.2 AA • Screen reader • Клавіатура • Контраст • Дислексія',
-            modalTitleText: 'Запис погоди',
-            tempLabel: 'Температура (°C):',
-            weatherTypeLabel: 'Тип погоди:',
-            windDirLabel: 'Напрям вітру:',
-            windSpeedLabel: 'Швидкість вітру (м/с):',
-            moodLabel: 'Настрій:',
-            notesLabel: 'Нотатки:',
-            saveBtnText: 'Зберегти',
-            cancelBtnText: 'Скасувати',
-            deleteBtnText: 'Видалити',
-            toastSaved: '✅ Збережено!',
-            toastDeleted: '🗑️ Видалено',
-            toastStudentSaved: '✅ Дані збережено!',
-            toastLocation: '✅ Локацію визначено: ',
-            alertTemp: 'Введи температуру від -50 до +50!',
-            alertFields: 'Заповни всі поля!',
-            alertLocation: 'Спочатку визнач локацію!',
-            alertDelete: 'Видалити цей запис?',
-            locationPlaceholder: '🏙️ Введи назву міста...',
-            namePlaceholder: 'Ім\'я та прізвище',
-            classPlaceholder: 'Клас (5-А)',
-            notesPlaceholder: 'Що цікавого помітив?'
+            modalTitleText: 'Запис погоди', tempLabel: 'Температура (°C):',
+            weatherTypeLabel: 'Тип погоди:', windDirLabel: 'Напрям вітру:',
+            windSpeedLabel: 'Швидкість вітру (м/с):', moodLabel: 'Настрій:', notesLabel: 'Нотатки:',
+            saveBtnText: 'Зберегти', cancelBtnText: 'Скасувати', deleteBtnText: 'Видалити',
+            toastSaved: '✅ Збережено!', toastDeleted: '🗑️ Видалено',
+            toastStudentSaved: '✅ Дані збережено!', toastLocation: '✅ Локацію визначено: ',
+            alertTemp: 'Введи температуру від -50 до +50!', alertFields: 'Заповни всі поля!',
+            alertLocation: 'Спочатку визнач локацію!', alertDelete: 'Видалити цей запис?',
+            locationPlaceholder: '🏙️ Введи назву міста...', namePlaceholder: 'Ім\'я та прізвище',
+            classPlaceholder: 'Клас (5-А)', notesPlaceholder: 'Що цікавого помітив?',
+            badgeFirst: '🌱 Перше спостереження!', badgeWeek: '⭐ Тижневий метеоролог!',
+            badgeMonth: '👑 Професійний кліматолог!', badgeSunny: '☀️ Сонячний друг!',
+            badgeRain: '☔ Дощовий експерт!', badgeStreak: '🔥 7 днів підряд!',
+            noBadges: 'Заповнюй календар щодня, щоб отримати досягнення! 🌟'
         },
         en: {
-            appTitle: '🌈 WeatherLab NUS',
-            appSubtitle: '🌍 Weather Calendar • Geography • Grades 5-6',
-            geoText: 'Detect Location',
-            saveText: 'Save',
-            todayText: 'Today',
-            compareText: 'Compare with Real Data',
-            pdfText: 'Create Report (PDF)',
-            saveReportText: 'Save Report CSV',
-            printText: 'Print',
+            appTitle: '🌈 WeatherLab NUS', appSubtitle: '🌍 Weather Calendar • Geography • Grades 5-6',
+            geoText: 'Detect Location', saveText: 'Save', todayText: 'Today',
+            compareText: 'Compare with Real Data', pdfText: 'Create Report (PDF)',
+            saveReportText: 'Save Report CSV', printText: 'Print',
             statsTitle: 'Monthly Statistics',
-            statDaysLabel: 'days',
-            statTempLabel: 'avg temp',
-            statSunnyLabel: 'sunny',
-            statWindyLabel: 'windy',
-            statStreakLabel: 'streak',
-            statAccLabel: 'accuracy',
-            weatherWindowTitle: 'Real Weather in Your City',
-            weatherSourceText: 'Data from',
+            statDaysLabel: 'days', statTempLabel: 'avg temp', statSunnyLabel: 'sunny',
+            statWindyLabel: 'windy', statStreakLabel: 'streak', statAccLabel: 'accuracy',
+            badgesTitle: 'My Achievements',
+            weatherWindowTitle: 'Real Weather in Your City', weatherSourceText: 'Data from',
             methodTitle: '📋 NUS Grades 5-6',
             methodSubjects: '<strong>Subjects:</strong> 🌍 Geography • 🔬 Natural Sciences',
             a11yInfo: 'WCAG 2.2 AA • Screen reader • Keyboard • Contrast • Dyslexia',
-            modalTitleText: 'Weather Record',
-            tempLabel: 'Temperature (°C):',
-            weatherTypeLabel: 'Weather Type:',
-            windDirLabel: 'Wind Direction:',
-            windSpeedLabel: 'Wind Speed (m/s):',
-            moodLabel: 'Mood:',
-            notesLabel: 'Notes:',
-            saveBtnText: 'Save',
-            cancelBtnText: 'Cancel',
-            deleteBtnText: 'Delete',
-            toastSaved: '✅ Saved!',
-            toastDeleted: '🗑️ Deleted',
-            toastStudentSaved: '✅ Data saved!',
-            toastLocation: '✅ Location detected: ',
-            alertTemp: 'Enter temperature from -50 to +50!',
-            alertFields: 'Fill in all fields!',
-            alertLocation: 'Set your location first!',
-            alertDelete: 'Delete this record?',
-            locationPlaceholder: '🏙️ Enter city name...',
-            namePlaceholder: 'Full Name',
-            classPlaceholder: 'Grade (5-A)',
-            notesPlaceholder: 'What did you notice?'
+            modalTitleText: 'Weather Record', tempLabel: 'Temperature (°C):',
+            weatherTypeLabel: 'Weather Type:', windDirLabel: 'Wind Direction:',
+            windSpeedLabel: 'Wind Speed (m/s):', moodLabel: 'Mood:', notesLabel: 'Notes:',
+            saveBtnText: 'Save', cancelBtnText: 'Cancel', deleteBtnText: 'Delete',
+            toastSaved: '✅ Saved!', toastDeleted: '🗑️ Deleted',
+            toastStudentSaved: '✅ Data saved!', toastLocation: '✅ Location detected: ',
+            alertTemp: 'Enter temperature from -50 to +50!', alertFields: 'Fill in all fields!',
+            alertLocation: 'Set your location first!', alertDelete: 'Delete this record?',
+            locationPlaceholder: '🏙️ Enter city name...', namePlaceholder: 'Full Name',
+            classPlaceholder: 'Grade (5-A)', notesPlaceholder: 'What did you notice?',
+            badgeFirst: '🌱 First Observation!', badgeWeek: '⭐ Weekly Meteorologist!',
+            badgeMonth: '👑 Professional Climatologist!', badgeSunny: '☀️ Sun Lover!',
+            badgeRain: '☔ Rain Expert!', badgeStreak: '🔥 7-Day Streak!',
+            noBadges: 'Fill the calendar daily to earn achievements! 🌟'
         }
     };
+    
+    const AVATARS = ['🦊','🐱','🐶','🐼','🦄','🐸','🦋','🐝','🌻','⭐','🌈','🚀','🌍','🔭','🎨','📚'];
     
     class WeatherLabApp {
         constructor() {
@@ -564,6 +588,8 @@
             this.day = null;
             this.lang = localStorage.getItem('wl_lang') || 'uk';
             this.a11y = JSON.parse(localStorage.getItem('wl_a11y') || '{"highContrast":false,"largeText":false,"dyslexicFont":false,"simplified":false}');
+            this.avatar = localStorage.getItem('wl_avatar') || '🦊';
+            this.unlockedBadges = JSON.parse(localStorage.getItem('wl_badges') || '[]');
             
             this.months = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
             this.monthsEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -586,6 +612,15 @@
                 {v:'ПнЗх',e:'↖'},{v:'ПнСх',e:'↗'},{v:'ПдЗх',e:'↙'},{v:'ПдСх',e:'↘'}
             ];
             
+            this.badgeDefs = [
+                {id:'first',cond:s=>s.total>=1,emoji:'🌱',uk:'Перше спостереження!',en:'First Observation!'},
+                {id:'week',cond:s=>s.total>=7,emoji:'⭐',uk:'Тижневий метеоролог!',en:'Weekly Meteorologist!'},
+                {id:'month',cond:s=>s.total>=30,emoji:'👑',uk:'Професійний кліматолог!',en:'Professional Climatologist!'},
+                {id:'sunny',cond:s=>s.sunny>=10,emoji:'☀️',uk:'Сонячний друг!',en:'Sun Lover!'},
+                {id:'rain',cond:s=>s.rain>=5,emoji:'☔',uk:'Дощовий експерт!',en:'Rain Expert!'},
+                {id:'streak7',cond:s=>s.maxStreak>=7,emoji:'🔥',uk:'7 днів підряд!',en:'7-Day Streak!'},
+            ];
+            
             this.init();
         }
         
@@ -595,15 +630,18 @@
             this.applyA11y();
             this.applyLang();
             this.initPickers();
+            this.initAvatarPicker();
             this.renderCalendar();
             this.updateStats();
             this.loadSavedData();
             this.updateWeatherIframe();
+            this.renderBadges();
             
             document.getElementById('current-month-label').textContent = 
                 `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
             
-            // Language buttons
+            document.getElementById('avatar-display').textContent = this.avatar;
+            
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     this.lang = btn.dataset.lang;
@@ -613,16 +651,21 @@
                     this.applyLang();
                     this.renderCalendar();
                     this.updateWeatherIframe();
+                    this.renderBadges();
                     document.getElementById('current-month-label').textContent = 
                         `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
                 });
             });
             
-            // Modal close
             document.getElementById('weather-modal').addEventListener('click', e => {
                 if (e.target === document.getElementById('weather-modal')) this.closeModal();
             });
             document.addEventListener('keydown', e => { if (e.key === 'Escape') this.closeModal(); });
+            document.addEventListener('click', e => {
+                if (!e.target.closest('#avatar-display') && !e.target.closest('#avatar-picker-popup')) {
+                    document.getElementById('avatar-picker-popup').classList.remove('show');
+                }
+            });
         }
         
         applyA11y() {
@@ -662,38 +705,55 @@
                 b.setAttribute('aria-checked', b.dataset.lang === this.lang);
             });
             
-            // Update all text
             const ids = {
-                'app-title': 'appTitle', 'app-subtitle': 'appSubtitle',
-                'geo-text': 'geoText', 'save-text': 'saveText', 'today-text': 'todayText',
-                'compare-text': 'compareText', 'pdf-text': 'pdfText',
-                'save-report-text': 'saveReportText', 'print-text': 'printText',
-                'stats-title': 'statsTitle', 'stat-days-label': 'statDaysLabel',
-                'stat-temp-label': 'statTempLabel', 'stat-sunny-label': 'statSunnyLabel',
-                'stat-windy-label': 'statWindyLabel', 'stat-streak-label': 'statStreakLabel',
-                'stat-acc-label': 'statAccLabel',
-                'weather-window-title': 'weatherWindowTitle',
-                'weather-source-text': 'weatherSourceText',
-                'method-title': 'methodTitle', 'a11y-info': 'a11yInfo',
-                'modal-title-text': 'modalTitleText', 'temp-label': 'tempLabel',
-                'weather-type-label': 'weatherTypeLabel', 'wind-dir-label': 'windDirLabel',
-                'wind-speed-label': 'windSpeedLabel', 'mood-label': 'moodLabel',
-                'notes-label': 'notesLabel', 'save-btn-text': 'saveBtnText',
-                'cancel-btn-text': 'cancelBtnText', 'delete-btn-text': 'deleteBtnText'
+                'app-title':'appTitle','app-subtitle':'appSubtitle','geo-text':'geoText',
+                'save-text':'saveText','today-text':'todayText','compare-text':'compareText',
+                'pdf-text':'pdfText','save-report-text':'saveReportText','print-text':'printText',
+                'stats-title':'statsTitle','stat-days-label':'statDaysLabel',
+                'stat-temp-label':'statTempLabel','stat-sunny-label':'statSunnyLabel',
+                'stat-windy-label':'statWindyLabel','stat-streak-label':'statStreakLabel',
+                'stat-acc-label':'statAccLabel','badges-title':'badgesTitle',
+                'weather-window-title':'weatherWindowTitle','weather-source-text':'weatherSourceText',
+                'method-title':'methodTitle','a11y-info':'a11yInfo',
+                'modal-title-text':'modalTitleText','temp-label':'tempLabel',
+                'weather-type-label':'weatherTypeLabel','wind-dir-label':'windDirLabel',
+                'wind-speed-label':'windSpeedLabel','mood-label':'moodLabel',
+                'notes-label':'notesLabel','save-btn-text':'saveBtnText',
+                'cancel-btn-text':'cancelBtnText','delete-btn-text':'deleteBtnText'
             };
             
-            Object.entries(ids).forEach(([id, key]) => {
+            Object.entries(ids).forEach(([id,key]) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = this.t(key);
             });
             
             document.getElementById('method-subjects').innerHTML = this.t('methodSubjects');
-            
-            // Placeholders
             document.getElementById('location-input').placeholder = this.t('locationPlaceholder');
             document.getElementById('student-name').placeholder = this.t('namePlaceholder');
             document.getElementById('student-class').placeholder = this.t('classPlaceholder');
             document.getElementById('notes-input').placeholder = this.t('notesPlaceholder');
+        }
+        
+        initAvatarPicker() {
+            const picker = document.getElementById('avatar-picker-popup');
+            picker.innerHTML = AVATARS.map(a => 
+                `<button class="avatar-option-popup${a===this.avatar?' selected':''}" 
+                     data-avatar="${a}" onclick="app.selectAvatar('${a}')" 
+                     aria-label="Аватар ${a}">${a}</button>`
+            ).join('');
+        }
+        
+        toggleAvatarPicker() {
+            const picker = document.getElementById('avatar-picker-popup');
+            picker.classList.toggle('show');
+        }
+        
+        selectAvatar(a) {
+            this.avatar = a;
+            localStorage.setItem('wl_avatar', a);
+            document.getElementById('avatar-display').textContent = a;
+            document.getElementById('avatar-picker-popup').classList.remove('show');
+            this.initAvatarPicker();
         }
         
         initPickers() {
@@ -804,6 +864,7 @@
                 `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
             this.renderCalendar();
             this.updateStats();
+            this.renderBadges();
             this.updateWeatherIframe();
         }
         
@@ -815,6 +876,7 @@
                 `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
             this.renderCalendar();
             this.updateStats();
+            this.renderBadges();
             this.updateWeatherIframe();
         }
         
@@ -887,6 +949,8 @@
             localStorage.setItem(`wl_${this.year}_${this.month}_${this.day}`, JSON.stringify(data));
             this.renderCalendar();
             this.updateStats();
+            this.checkBadges();
+            this.renderBadges();
             this.closeModal();
             this.showToast(this.t('toastSaved'));
         }
@@ -896,29 +960,72 @@
             localStorage.removeItem(`wl_${this.year}_${this.month}_${this.day}`);
             this.renderCalendar();
             this.updateStats();
+            this.renderBadges();
             this.closeModal();
             this.showToast(this.t('toastDeleted'));
         }
         
-        updateStats() {
+        getStats() {
             const dim = new Date(this.year, this.month + 1, 0).getDate();
-            let count = 0, totalTemp = 0, sunny = 0, windy = 0, streak = 0, maxStreak = 0;
+            let total = 0, totalTemp = 0, sunny = 0, rain = 0, windy = 0, streak = 0, maxStreak = 0;
             
             for (let d = 1; d <= dim; d++) {
                 const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
                 if (data) {
-                    count++; totalTemp += data.t;
+                    total++; totalTemp += data.t;
                     if (data.w === '☀️') sunny++;
+                    if (data.w === '🌧️') rain++;
                     if (data.w === '🌪️' || data.ws >= 10) windy++;
                     streak++; maxStreak = Math.max(maxStreak, streak);
                 } else { streak = 0; }
             }
+            return { total, totalTemp, sunny, rain, windy, maxStreak, dim };
+        }
+        
+        updateStats() {
+            const s = this.getStats();
+            document.getElementById('stat-days').textContent = s.total;
+            document.getElementById('stat-avg-temp').textContent = s.total > 0 ? `${(s.totalTemp/s.total).toFixed(1)}°C` : '--°C';
+            document.getElementById('stat-sunny').textContent = s.sunny;
+            document.getElementById('stat-windy').textContent = s.windy;
+            document.getElementById('stat-streak').textContent = s.maxStreak;
+        }
+        
+        checkBadges() {
+            const s = this.getStats();
+            this.badgeDefs.forEach(b => {
+                if (!this.unlockedBadges.includes(b.id) && b.cond(s)) {
+                    this.unlockedBadges.push(b.id);
+                    localStorage.setItem('wl_badges', JSON.stringify(this.unlockedBadges));
+                    this.showBadgePopup(b);
+                }
+            });
+        }
+        
+        showBadgePopup(b) {
+            const popup = document.createElement('div');
+            popup.className = 'badge-popup';
+            popup.setAttribute('role', 'alert');
+            popup.innerHTML = `<span style="font-size:2rem;">${b.emoji}</span> ${this.lang==='uk'?b.uk:b.en}`;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 4000);
+            if (navigator.vibrate) navigator.vibrate([200,100,200]);
+        }
+        
+        renderBadges() {
+            const container = document.getElementById('badges-container');
+            const unlocked = this.unlockedBadges;
             
-            document.getElementById('stat-days').textContent = count;
-            document.getElementById('stat-avg-temp').textContent = count > 0 ? `${(totalTemp/count).toFixed(1)}°C` : '--°C';
-            document.getElementById('stat-sunny').textContent = sunny;
-            document.getElementById('stat-windy').textContent = windy;
-            document.getElementById('stat-streak').textContent = maxStreak;
+            if (unlocked.length === 0) {
+                container.innerHTML = `<p style="color:var(--gray-500);">${this.t('noBadges')}</p>`;
+                return;
+            }
+            
+            container.innerHTML = this.badgeDefs
+                .filter(b => unlocked.includes(b.id))
+                .map(b => `<span style="font-size:2rem;padding:5px;background:var(--gray-100);border-radius:var(--radius-md);" 
+                     title="${this.lang==='uk'?b.uk:b.en}">${b.emoji}</span>`)
+                .join('');
         }
         
         saveStudentInfo() {
@@ -931,8 +1038,7 @@
         
         async detectLocation() {
             const btn = document.getElementById('geo-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳...';
+            btn.disabled = true; btn.textContent = '⏳...';
             
             try {
                 const pos = await new Promise((res, rej) => 
@@ -963,12 +1069,9 @@
         updateWeatherIframe() {
             const loc = JSON.parse(localStorage.getItem('wl_location') || 'null');
             const iframe = document.getElementById('weather-iframe');
-            
             if (loc?.lat) {
-                // Ventusky — shows real weather map for the location
                 iframe.src = `https://www.ventusky.com/${loc.lat.toFixed(2)}/${loc.lon.toFixed(2)}?language=${this.lang==='uk'?'uk':'en'}`;
             } else {
-                // Default: Ukraine weather
                 iframe.src = `https://www.ventusky.com/49.00/31.00?language=${this.lang==='uk'?'uk':'en'}`;
             }
         }
@@ -1004,8 +1107,7 @@
                     
                     const realTemp = (real.daily.temperature_2m_max[idx] + real.daily.temperature_2m_min[idx]) / 2;
                     const diff = Math.abs(data.t - realTemp);
-                    totalDiff += diff;
-                    compCount++;
+                    totalDiff += diff; compCount++;
                     
                     const acc = diff <= 2 ? 'good' : diff <= 5 ? 'fair' : 'poor';
                     const emoji = diff <= 2 ? '🟢' : diff <= 5 ? '🟡' : '🔴';
@@ -1019,17 +1121,13 @@
                     <h3>🔬 ${this.lang==='uk'?'Порівняння з реальними даними':'Comparison with Real Data'}</h3>
                     <table class="comparison-table">
                         <tr><th>${this.lang==='uk'?'Дата':'Date'}</th><th>${this.lang==='uk'?'Твій запис':'Your record'}</th><th>${this.lang==='uk'?'Реальна t°':'Real temp'}</th><th>${this.lang==='uk'?'Різниця':'Difference'}</th></tr>
-                        ${html || `<tr><td colspan="4">${this.lang==='uk'?'Немає даних для порівняння':'No data to compare'}</td></tr>`}
+                        ${html || `<tr><td colspan="4">${this.lang==='uk'?'Немає даних':'No data'}</td></tr>`}
                     </table>
-                    <p style="margin-top:10px;"><strong>🎯 ${this.lang==='uk'?'Середня точність':'Average accuracy'}: ${accuracy}%</strong></p>
+                    <p><strong>🎯 ${this.lang==='uk'?'Точність':'Accuracy'}: ${accuracy}%</strong></p>
                 `;
-                
             } catch(err) {
-                console.error('API error:', err);
-                document.getElementById('comparison-results').innerHTML = `
-                    <p style="color:var(--error);">❌ ${this.lang==='uk'?'Помилка отримання даних. Спробуй пізніше.':'Error fetching data. Try again later.'}</p>
-                    <p style="font-size:0.85rem;">${this.lang==='uk'?'Подивись реальну погоду у вікні вище':'Check real weather in the window above'} 👆</p>
-                `;
+                document.getElementById('comparison-results').innerHTML = 
+                    `<p style="color:var(--error);">❌ ${this.lang==='uk'?'Помилка. Перевір інтернет.':'Error. Check internet.'}</p>`;
             } finally {
                 btn.disabled = false;
                 btn.textContent = '🔬 ' + this.t('compareText');
@@ -1040,38 +1138,32 @@
             const name = localStorage.getItem('wl_student_name') || (this.lang==='uk'?'Учень':'Student');
             const cls = localStorage.getItem('wl_student_class') || '5-6';
             const loc = JSON.parse(localStorage.getItem('wl_location') || 'null');
-            const locName = loc?.name || (this.lang==='uk'?'Не вказано':'Not specified');
+            const locName = loc?.name || (this.lang==='uk'?'Не вказано':'N/A');
             const dim = new Date(this.year, this.month + 1, 0).getDate();
+            const s = this.getStats();
             
-            let rows = '', totalTemp = 0, count = 0;
+            let rows = '';
             for (let d = 1; d <= dim; d++) {
                 const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
-                if (data) {
-                    rows += `<tr><td>${d}.${this.month+1}.${this.year}</td><td><strong>${data.t}°C</strong></td><td style="font-size:1.5rem">${data.w}</td><td>${data.wd||'—'}</td><td>${data.ws||0} м/с</td><td>${data.m||'—'}</td><td>${data.n||'—'}</td></tr>`;
-                    totalTemp += data.t; count++;
-                }
+                if (data) rows += `<tr><td>${d}.${this.month+1}.${this.year}</td><td><strong>${data.t}°C</strong></td><td style="font-size:1.5rem">${data.w}</td><td>${data.wd||'—'}</td><td>${data.ws||0} м/с</td><td>${data.m||'—'}</td><td>${data.n||'—'}</td></tr>`;
             }
             
-            const avgTemp = count > 0 ? (totalTemp/count).toFixed(1) : '—';
-            const monthName = this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month];
-            
             const html = `<!DOCTYPE html><html lang="${this.lang}"><head><meta charset="UTF-8"><title>${this.lang==='uk'?'Метеозвіт':'Weather Report'} — ${name}</title>
-            <style>@page{size:A4;margin:1.5cm}body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.4}
+            <style>@page{size:A4;margin:1.5cm}body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}
             h1{color:#01579b;text-align:center}.info{background:#e3f2fd;padding:15px;border-radius:10px;margin:15px 0}
             table{width:100%;border-collapse:collapse;margin:15px 0;font-size:11px}
             th{background:#0277bd;color:white;padding:6px}td{padding:5px;border:1px solid #ddd}
             .footer{text-align:center;color:#888;margin-top:30px;font-size:10px}
             @media print{body{padding:0}}</style></head><body>
-            <h1>🌤️ ${this.lang==='uk'?'Метеорологічний звіт':'Weather Report'}</h1>
+            <h1>🌤️ ${this.lang==='uk'?'Метеозвіт':'Weather Report'} ${this.avatar}</h1>
             <div class="info"><p><strong>${this.lang==='uk'?'Учень':'Student'}:</strong> ${name}</p>
             <p><strong>${this.lang==='uk'?'Клас':'Class'}:</strong> ${cls}</p>
             <p><strong>${this.lang==='uk'?'Локація':'Location'}:</strong> ${locName}</p>
-            <p><strong>${this.lang==='uk'?'Період':'Period'}:</strong> ${monthName} ${this.year}</p>
-            <p><strong>${this.lang==='uk'?'Предмет':'Subject'}:</strong> ${this.lang==='uk'?'🌍 Географія / 🔬 Природничі науки (НУШ 5-6 клас)':'🌍 Geography / 🔬 Natural Sciences (NUS 5-6)'}</p>
-            <p><strong>${this.lang==='uk'?'Середня t°':'Avg temp'}:</strong> ${avgTemp}°C | <strong>${this.lang==='uk'?'Днів':'Days'}:</strong> ${count}</p></div>
+            <p><strong>${this.lang==='uk'?'Період':'Period'}:</strong> ${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}</p>
+            <p><strong>${this.lang==='uk'?'Середня t°':'Avg temp'}:</strong> ${s.total>0?(s.totalTemp/s.total).toFixed(1):'—'}°C | <strong>${this.lang==='uk'?'Днів':'Days'}:</strong> ${s.total}</p></div>
             <table><tr><th>${this.lang==='uk'?'Дата':'Date'}</th><th>t°C</th><th>${this.lang==='uk'?'Погода':'Weather'}</th><th>${this.lang==='uk'?'Вітер':'Wind'}</th><th>${this.lang==='uk'?'Швидк':'Speed'}</th><th>${this.lang==='uk'?'Настрій':'Mood'}</th><th>${this.lang==='uk'?'Нотатки':'Notes'}</th></tr>
-            ${rows || `<tr><td colspan="7" style="text-align:center;padding:20px;">${this.lang==='uk'?'Немає записів':'No records'}</td></tr>`}</table>
-            <div class="footer"><p>📋 WeatherLab НУШ v2.2 | ${new Date().toLocaleDateString(this.lang==='uk'?'uk-UA':'en-US')}</p></div></body></html>`;
+            ${rows||`<tr><td colspan="7" style="text-align:center;padding:20px;">${this.lang==='uk'?'Немає записів':'No records'}</td></tr>`}</table>
+            <div class="footer"><p>📋 WeatherLab НУШ v2.3 | ${new Date().toLocaleDateString(this.lang==='uk'?'uk-UA':'en-US')}</p></div></body></html>`;
             
             const w = window.open('', '_blank');
             w.document.write(html);
@@ -1112,7 +1204,6 @@
     
     document.addEventListener('DOMContentLoaded', () => {
         window.app = new WeatherLabApp();
-        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
