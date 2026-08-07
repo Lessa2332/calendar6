@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4fc3f7">
+    <meta name="description" content="Інтерактивний календар погоди для учнів НУШ. Спостерігай, записуй та порівнюй погоду!">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <title>🌤️ WeatherLab НУШ - Календар погоди для дослідників</title>
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://api.open-meteo.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: https:;
+        connect-src 'self' https://api.open-meteo.com https://nominatim.openstreetmap.org;
+    ">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== ДИЗАЙН-СИСТЕМА ===== */
+        :root {
+            /* Primary palette - WCAG AA compliant */
+            --primary: #0277bd;
+            --primary-light: #4fc3f7;
+            --primary-dark: #01579b;
+            
+            /* Secondary palette */
+            --secondary: #f57c00;
+            --secondary-light: #ffb74d;
+            --secondary-dark: #e65100;
+            
+            /* Semantic colors */
+            --success: #2e7d32;
+            --warning: #f9a825;
+            --error: #c62828;
+            --info: #0288d1;
+            
+            /* Neutral palette */
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #eeeeee;
+            --gray-300: #e0e0e0;
+            --gray-500: #9e9e9e;
+            --gray-700: #616161;
+            --gray-900: #212121;
+            
+            /* Typography */
+            --font-display: 'Bubblegum Sans', cursive;
+            --font-body: 'Open Sans', system-ui, sans-serif;
+            
+            /* Spacing scale */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* Border radius */
+            --radius-sm: 0.5rem;
+            --radius-md: 1rem;
+            --radius-lg: 1.5rem;
+            --radius-xl: 2rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+            
+            /* Transitions */
+            --transition-fast: 150ms ease;
+            --transition-base: 300ms ease;
+            
+            /* Layout */
+            --container-max: 1200px;
+            --sidebar-width: 300px;
+        }
+        
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            :root {
+                --primary: #0000ff;
+                --primary-light: #4444ff;
+                --gray-100: #ffffff;
+                --gray-200: #eeeeee;
+            }
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* ===== ACCESSIBILITY ===== */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+        
+        :focus-visible {
+            outline: 3px solid var(--secondary);
+            outline-offset: 2px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: var(--space-md);
+            z-index: 10000;
+            transition: top var(--transition-base);
+        }
+        
+        .skip-link:focus {
+            top: 0;
+        }
+        
+        /* ===== LAYOUT ===== */
+        .app-container {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: var(--space-md);
+            display: grid;
+            gap: var(--space-lg);
+            grid-template-areas:
+                "header"
+                "location"
+                "main"
+                "stats"
+                "methodology"
+                "footer";
+        }
+        
+        @media (min-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr var(--sidebar-width);
+                grid-template-areas:
+                    "header header"
+                    "location location"
+                    "main stats"
+                    "main methodology"
+                    "footer footer";
+                gap: var(--space-xl);
+            }
+        }
+        
+        /* ===== HEADER ===== */
+        .app-header {
+            grid-area: header;
+            text-align: center;
+            padding: var(--space-xl);
+            background: rgba(255,255,255,0.9);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
+        }
+        
+        .app-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            color: var(--primary-dark);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .app-subtitle {
+            color: var(--gray-700);
+            font-size: 1.1rem;
+        }
+        
+        /* Language switcher */
+        .lang-switcher {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            display: flex;
+            gap: var(--space-xs);
+        }
+        
+        .lang-btn {
+            padding: var(--space-xs) var(--space-sm);
+            border: 2px solid var(--primary-light);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+        
+        .lang-btn[aria-pressed="true"] {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* ===== LOCATION SELECTOR ===== */
+        .location-panel {
+            grid-area: location;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+            align-items: center;
+        }
+        
+        .location-input {
+            flex: 1;
+            min-width: 200px;
+            padding: var(--space-md);
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: var(--font-body);
+        }
+        
+        .location-input:focus {
+            border-color: var(--primary-light);
+        }
+        
+        .geo-btn {
+            padding: var(--space-md) var(--space-lg);
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            transition: background var(--transition-fast);
+        }
+        
+        .geo-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .geo-btn:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+        }
+        
+        /* ===== CALENDAR ===== */
+        .main-content {
+            grid-area: main;
+        }
+        
+        .month-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+        }
+        
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--space-xs);
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .weekday-header {
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray-700);
+            padding: var(--space-sm);
+            font-size: 0.9rem;
+        }
+        
+        .calendar-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            border: 2px solid transparent;
+            font-size: 0.9rem;
+            position: relative;
+            min-width: 44px;
+            min-height: 44px;
+            background: var(--gray-50);
+        }
+        
+        .calendar-cell:hover:not(.future):not(.empty) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: var(--primary-light);
+            color: white;
+        }
+        
+        .calendar-cell.today {
+            border-color: var(--secondary);
+            background: #fff3e0;
+            font-weight: 700;
+        }
+        
+        .calendar-cell.recorded {
+            border-color: var(--success);
+            background: #e8f5e9;
+        }
+        
+        .calendar-cell.future {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .calendar-cell.empty {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .cell-date {
+            font-weight: 600;
+        }
+        
+        .cell-weather {
+            font-size: 1.2rem;
+        }
+        
+        .cell-temp {
+            font-size: 0.75rem;
+            color: var(--gray-700);
+        }
+        
+        .comparison-indicator {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.7rem;
+        }
+        
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            place-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+            padding: var(--space-md);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--gray-700);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--space-md);
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: var(--font-body);
+            transition: border-color var(--transition-fast);
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-light);
+            outline: none;
+        }
+        
+        .form-input[aria-invalid="true"] {
+            border-color: var(--error);
+        }
+        
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: var(--space-xs);
+            display: none;
+        }
+        
+        .form-input[aria-invalid="true"] + .error-message {
+            display: block;
+        }
+        
+        /* Emoji picker */
+        .emoji-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+        
+        .emoji-option {
+            font-size: 2rem;
+            padding: var(--space-sm);
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            background: white;
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+        .emoji-option:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-light);
+        }
+        
+        .emoji-option.selected {
+            border-color: var(--primary);
+            background: #e3f2fd;
+            transform: scale(1.1);
+        }
+        
+        /* Wind selector */
+        .wind-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+        }
+        
+        .wind-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all var(--transition-fast);
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+        .wind-btn.selected {
+            border-color: var(--primary);
+            background: #e3f2fd;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: var(--space-md) var(--space-xl);
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1rem;
+            font-family: var(--font-body);
+            min-height: 44px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-900);
+        }
+        
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ===== STATS PANEL ===== */
+        .stats-panel {
+            grid-area: stats;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-md);
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: var(--space-md);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* ===== COMPARISON TABLE ===== */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-md);
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--gray-300);
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+        
+        .accuracy-good {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .accuracy-fair {
+            color: var(--warning);
+            font-weight: 600;
+        }
+        
+        .accuracy-poor {
+            color: var(--error);
+            font-weight: 600;
+        }
+        
+        /* ===== METHODOLOGY PANEL ===== */
+        .methodology-panel {
+            grid-area: methodology;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .methodology-panel h2 {
+            color: var(--primary-dark);
+            margin-bottom: var(--space-md);
+        }
+        
+        .nush-outcomes {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .nush-outcomes li {
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .nush-outcomes li:last-child {
+            border-bottom: none;
+        }
+        
+        .outcome-code {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* ===== LOADING & STATES ===== */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gray-300);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .calendar-grid {
+                gap: 2px;
+                padding: var(--space-xs);
+            }
+            
+            .calendar-cell {
+                font-size: 0.75rem;
+                min-width: 38px;
+                min-height: 38px;
+            }
+            
+            .modal-content {
+                padding: var(--space-md);
+                margin: var(--space-sm);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .wind-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .app-title {
+                font-size: 1.5rem;
+            }
+            
+            .cell-weather {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: var(--space-sm) var(--space-md);
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            .modal-overlay,
+            .nav-btn,
+            .btn,
+            .lang-switcher,
+            .geo-btn {
+                display: none !important;
+            }
+            
+            body {
+                background: white;
+            }
+            
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .calendar-cell {
+                border: 1px solid #000;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Перейти до основного вмісту</a>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header" role="banner">
+            <h1 class="app-title" data-i18n="appTitle">🌈 WeatherLab НУШ</h1>
+            <p class="app-subtitle" data-i18n="appSubtitle">Інтерактивний календар спостережень за погодою</p>
+            
+            <!-- Language switcher -->
+            <div class="lang-switcher" role="radiogroup" aria-label="Вибір мови">
+                <button class="lang-btn" role="radio" aria-checked="true" aria-pressed="true" 
+                        data-lang="uk" aria-label="Українська мова">🇺🇦 УКР</button>
+                <button class="lang-btn" role="radio" aria-checked="false" aria-pressed="false" 
+                        data-lang="en" aria-label="English language">🇬🇧 EN</button>
+            </div>
+        </header>
+        
+        <!-- Location Selector -->
+        <section class="location-panel" aria-labelledby="location-heading">
+            <h2 id="location-heading" class="sr-only">Вибір локації</h2>
+            <label for="location-input" class="sr-only">Введіть назву міста</label>
+            <input 
+                type="text" 
+                id="location-input" 
+                class="location-input" 
+                placeholder="🏙️ Введіть назву міста..."
+                aria-label="Назва міста для спостереження"
+                data-i18n-placeholder="locationPlaceholder"
+            >
+            <button class="geo-btn" id="geo-btn" aria-label="Визначити моє місцезнаходження">
+                📍 <span data-i18n="detectLocation">Визначити</span>
+            </button>
+            <div id="location-status" aria-live="polite" class="sr-only"></div>
+        </section>
+        
+        <!-- Main Calendar -->
+        <main id="main-content" class="main-content" role="main" aria-label="Календар погоди">
+            <div class="month-navigation">
+                <button class="nav-btn" id="prev-month" aria-label="Попередній місяць">←</button>
+                <h2 class="current-month" id="current-month-label" aria-live="polite">Січень 2026</h2>
+                <button class="nav-btn" id="next-month" aria-label="Наступний місяць">→</button>
+            </div>
+            
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Календар на місяць">
+                <!-- Generated dynamically -->
+            </div>
+            
+            <div style="margin-top: var(--space-lg); text-align: center;">
+                <button class="btn btn-primary" id="compare-btn">
+                    🔬 <span data-i18n="compareWithReal">Порівняти з реальними даними</span>
+                </button>
+            </div>
+        </main>
+        
+        <!-- Statistics Panel -->
+        <aside class="stats-panel" aria-labelledby="stats-heading">
+            <h2 id="stats-heading" data-i18n="statistics">📊 Статистика</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-days">0</div>
+                    <div data-i18n="daysRecorded">днів записано</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-temp">--°C</div>
+                    <div data-i18n="avgTemp">середня t°</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-accuracy">--%</div>
+                    <div data-i18n="accuracy">точність</div>
+                </div>
+            </div>
+            
+            <div id="comparison-results" aria-live="polite"></div>
+        </aside>
+        
+        <!-- Methodology Panel -->
+        <section class="methodology-panel" aria-labelledby="methodology-heading">
+            <h2 id="methodology-heading" data-i18n="methodologyPassport">📋 Методичний паспорт</h2>
+            
+            <h3 data-i18n="nushOutcomes">Групи результатів НУШ:</h3>
+            <ul class="nush-outcomes">
+                <li>
+                    <span class="outcome-code">ПРО 1.1</span> - 
+                    <span data-i18n="outcome1">Досліджує об'єкти природи, використовуючи доступні прилади</span>
+                </li>
+                <li>
+                    <span class="outcome-code">ПРО 1.2</span> - 
+                    <span data-i18n="outcome2">Фіксує результати спостережень у різні способи</span>
+                </li>
+                <li>
+                    <span class="outcome-code">ПРО 1.4</span> - 
+                    <span data-i18n="outcome3">Встановлює взаємозв'язки між об'єктами та явищами природи</span>
+                </li>
+                <li>
+                    <span class="outcome-code">ПРО 2.1</span> - 
+                    <span data-i18n="outcome4">Аналізує та порівнює отримані дані</span>
+                </li>
+                <li>
+                    <span class="outcome-code">МАО 2.3</span> - 
+                    <span data-i18n="outcome5">Представляє дані у вигляді таблиць, графіків, діаграм</span>
+                </li>
+            </ul>
+            
+            <h3 style="margin-top: var(--space-lg);" data-i18n="inclusiveAdaptations">Інклюзивні адаптації:</h3>
+            <ul>
+                <li data-i18n="adaptation1">Підтримка екранних читачів (ARIA-мітки)</li>
+                <li data-i18n="adaptation2">Навігація з клавіатури</li>
+                <li data-i18n="adaptation3">Високий контраст (WCAG AA)</li>
+                <li data-i18n="adaptation4">Масштабування до 200%</li>
+                <li data-i18n="adaptation5">Спрощений режим для учнів з ООП</li>
+                <li data-i18n="adaptation6">Альтернативні тексти для всіх зображень</li>
+            </ul>
+        </section>
+        
+        <!-- Footer -->
+        <footer style="grid-area: footer; text-align: center; padding: var(--space-lg);" role="contentinfo">
+            <p>🌍 <span data-i18n="dataSource">Дані з</span> <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a></p>
+            <p data-i18n="version">Версія 2.0 | PWA | WCAG 2.2 AA</p>
+        </footer>
+    </div>
+    
+    <!-- Weather Input Modal -->
+    <div class="modal-overlay" id="weather-modal" role="dialog" aria-modal="true" 
+         aria-labelledby="modal-title" hidden>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Закрити вікно" id="modal-close">✕</button>
+            
+            <h2 id="modal-title" data-i18n="weatherRecord">Запис погоди</h2>
+            
+            <form id="weather-form" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="temp-input" data-i18n="temperature">
+                        🌡️ Температура (°C):
+                    </label>
+                    <input 
+                        type="number" 
+                        id="temp-input" 
+                        class="form-input" 
+                        step="0.1" 
+                        placeholder="0.0"
+                        aria-required="true"
+                        aria-describedby="temp-error"
+                        min="-50"
+                        max="50"
+                    >
+                    <div class="error-message" id="temp-error" role="alert">
+                        <span data-i18n="tempError">Введіть температуру від -50 до +50</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="weatherType">☁️ Тип погоди:</label>
+                    <div class="emoji-grid" role="radiogroup" aria-label="Вибір типу погоди" id="weather-picker">
+                        <!-- Generated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="windInfo">💨 Вітер:</label>
+                    <div class="wind-grid" role="radiogroup" aria-label="Напрям вітру" id="wind-direction-picker">
+                        <!-- Generated dynamically -->
+                    </div>
+                    
+                    <label for="wind-speed" class="form-label" style="margin-top: var(--space-md);" data-i18n="windSpeed">
+                        Швидкість вітру (м/с):
+                    </label>
+                    <input 
+                        type="number" 
+                        id="wind-speed" 
+                        class="form-input" 
+                        step="0.1" 
+                        placeholder="0"
+                        min="0"
+                        max="50"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="notes-input" data-i18n="observations">📝 Спостереження:</label>
+                    <textarea 
+                        id="notes-input" 
+                        class="form-input" 
+                        rows="3" 
+                        placeholder="Що цікавого ти помітив сьогодні?"
+                        maxlength="500"
+                    ></textarea>
+                    <small style="color: var(--gray-500);">
+                        <span data-i18n="charactersLeft">Залишилось символів:</span> 
+                        <span id="char-count">500</span>
+                    </small>
+                </div>
+                
+                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary" data-i18n="save">💾 Зберегти</button>
+                    <button type="button" class="btn btn-secondary" id="modal-cancel" data-i18n="cancel">Скасувати</button>
+                    <button type="button" class="btn btn-danger" id="delete-record" data-i18n="delete">🗑️ Видалити</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // ===== SERVICE WORKER REGISTRATION =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('ServiceWorker registration failed:', err);
+                });
+            });
+        }
+        
+        // ===== APP CORE =====
+        class WeatherLabApp {
+            constructor() {
+                this.currentDate = new Date();
+                this.currentYear = this.currentDate.getFullYear();
+                this.currentMonth = this.currentDate.getMonth();
+                this.selectedDay = null;
+                this.currentLang = 'uk';
+                this.userLocation = null;
+                this.realWeatherData = null;
+                
+                // i18n strings
+                this.i18n = {
+                    uk: {
+                        appTitle: '🌈 WeatherLab НУШ',
+                        appSubtitle: 'Інтерактивний календар спостережень за погодою',
+                        locationPlaceholder: '🏙️ Введі
