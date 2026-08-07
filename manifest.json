@@ -1,48 +1,18 @@
-// ============================================================
-// sw.js — Service Worker для WeatherLab НУШ
-// ============================================================
-
-const CACHE = 'weatherlab-v2.1';
-const ASSETS = [
-    '/calendar6/',
-    '/calendar6/index.html',
-    '/calendar6/sw.js',
-    '/calendar6/manifest.json'
-];
-
-self.addEventListener('install', e => {
-    console.log('🛠️ SW: Install');
-    e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
-    );
-});
-
-self.addEventListener('activate', e => {
-    console.log('🚀 SW: Activate');
-    e.waitUntil(
-        caches.keys().then(keys => 
-            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-        ).then(() => self.clients.claim())
-    );
-});
-
-self.addEventListener('fetch', e => {
-    if (e.request.method !== 'GET') return;
-    if (e.request.url.includes('archive-api.open-meteo.com') || 
-        e.request.url.includes('nominatim.openstreetmap.org') ||
-        e.request.url.includes('googleapis.com') ||
-        e.request.url.includes('gstatic.com') ||
-        e.request.url.includes('cdn.jsdelivr.net')) return;
-    
-    e.respondWith(
-        fetch(e.request)
-            .then(res => {
-                if (res.status === 200) {
-                    const clone = res.clone();
-                    caches.open(CACHE).then(c => c.put(e.request, clone));
-                }
-                return res;
-            })
-            .catch(() => caches.match(e.request).then(r => r || new Response('Offline', {status:503})))
-    );
-});
+{
+    "name": "🌈 WeatherLab НУШ — Метеоспостереження",
+    "short_name": "WeatherLab",
+    "description": "Метеорологічний календар для учнів 5-6 класів НУШ. Географія, природничі науки.",
+    "start_url": "/calendar6/",
+    "display": "standalone",
+    "background_color": "#e3f2fd",
+    "theme_color": "#0277bd",
+    "lang": "uk",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%234fc3f7'/><stop offset='100%25' style='stop-color:%230277bd'/></linearGradient></defs><rect width='512' height='512' rx='92' fill='url(%23g)'/><text x='256' y='300' font-size='280' text-anchor='middle' dominant-baseline='middle'>🌈</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
