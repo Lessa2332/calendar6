@@ -123,7 +123,7 @@
             box-shadow: var(--shadow-md);
         }
         .location-panel { grid-area: location; display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; }
-        .student-panel { grid-area: student; display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; }
+        .student-panel { grid-area: student; display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; position: relative; }
         .main-content { grid-area: main; }
         .stats-panel { grid-area: stats; }
         .methodology-panel { grid-area: methodology; }
@@ -149,7 +149,9 @@
         .btn-secondary:hover { background: var(--gray-300); }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--error); color: white; }
+        .btn-warning { background: var(--warning); color: #333; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-sm { padding: var(--space-sm) var(--space-md); font-size: 0.85rem; }
         
         .month-navigation {
             display: flex; justify-content: center; align-items: center;
@@ -200,27 +202,17 @@
         .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
         .stat-label { font-size: 0.75rem; color: var(--gray-700); }
         
-        .weather-window {
-            background: white; border-radius: var(--radius-lg); padding: var(--space-lg);
-            box-shadow: var(--shadow-lg); margin-top: var(--space-lg);
-        }
-        .weather-window iframe {
-            width: 100%; height: 350px; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
-        }
-        
-        /* AVATAR SECTION */
-        .avatar-section {
-            display: flex; align-items: center; gap: var(--space-md);
-        }
+        /* Avatar */
+        .avatar-section { display: flex; align-items: center; gap: var(--space-md); }
         .avatar-display {
             font-size: 3rem; cursor: pointer; transition: transform var(--transition-fast);
             min-width: 60px; text-align: center;
         }
         .avatar-display:hover { transform: scale(1.2); }
         .avatar-picker-popup {
-            display: none; position: absolute; background: white; border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-xl); padding: var(--space-md); z-index: 100;
-            grid-template-columns: repeat(4, 1fr); gap: var(--space-sm);
+            display: none; position: absolute; top: 100%; left: 0; background: white;
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: var(--space-md);
+            z-index: 100; grid-template-columns: repeat(4, 1fr); gap: var(--space-sm);
             max-width: 280px;
         }
         .avatar-picker-popup.show { display: grid; }
@@ -233,6 +225,18 @@
             border-color: var(--primary); background: #e3f2fd; transform: scale(1.1);
         }
         
+        /* Weather details in modal */
+        .weather-detail-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);
+        }
+        .weather-detail-item {
+            background: var(--gray-50); padding: var(--space-md); border-radius: var(--radius-md);
+            text-align: center;
+        }
+        .weather-detail-emoji { font-size: 2rem; }
+        .weather-detail-value { font-weight: 700; font-size: 1.2rem; color: var(--primary-dark); }
+        .weather-detail-label { font-size: 0.75rem; color: var(--gray-700); }
+        
         /* Modal */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
@@ -240,7 +244,7 @@
         }
         .modal-content {
             background: white; border-radius: var(--radius-xl); padding: var(--space-xl);
-            width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto;
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
             box-shadow: var(--shadow-lg); position: relative;
         }
         .modal-close {
@@ -285,12 +289,6 @@
         .accuracy-fair { color: var(--warning); font-weight: 700; }
         .accuracy-poor { color: var(--error); font-weight: 700; }
         
-        .app-footer {
-            grid-area: footer; text-align: center; padding: var(--space-lg);
-            background: rgba(255,255,255,0.7); border-radius: var(--radius-lg); font-size: 0.85rem;
-        }
-        
-        /* BADGES */
         .badge-popup {
             position: fixed; top: var(--space-xl); right: var(--space-xl); z-index: 1500;
             background: linear-gradient(135deg, #ffd700, #ffab00); color: #333;
@@ -301,17 +299,40 @@
         }
         @keyframes badgeIn { from { transform: translateX(100%); opacity: 0; } }
         
+        /* Sinoptik iframe window */
+        .sinoptik-window {
+            background: white; border-radius: var(--radius-lg); padding: var(--space-lg);
+            box-shadow: var(--shadow-lg); margin-top: var(--space-lg);
+        }
+        .sinoptik-window iframe {
+            width: 100%; height: 500px; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+        }
+        
+        .weather-window {
+            background: white; border-radius: var(--radius-lg); padding: var(--space-lg);
+            box-shadow: var(--shadow-lg); margin-top: var(--space-lg);
+        }
+        .weather-window iframe {
+            width: 100%; height: 350px; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+        }
+        
+        .app-footer {
+            grid-area: footer; text-align: center; padding: var(--space-lg);
+            background: rgba(255,255,255,0.7); border-radius: var(--radius-lg); font-size: 0.85rem;
+        }
+        
         @media (max-width: 768px) {
             .calendar-cell { font-size: 0.7rem; min-width: 38px; min-height: 38px; }
             .cell-emoji { font-size: 0.9rem; }
             .btn { padding: var(--space-sm) var(--space-md); font-size: 0.85rem; }
-            .weather-window iframe { height: 250px; }
+            .weather-window iframe, .sinoptik-window iframe { height: 250px; }
+            .weather-detail-grid { grid-template-columns: 1fr 1fr; }
             .badge-popup { top: auto; bottom: var(--space-xl); right: var(--space-md); left: var(--space-md); }
         }
         @media print {
             .skip-link, .modal-overlay, .nav-btn, .btn, .lang-switcher, .geo-btn,
             .a11y-panel, .student-panel, .location-panel, .action-buttons,
-            .weather-window, .toast, .badge-popup, .avatar-picker-popup { display: none !important; }
+            .weather-window, .sinoptik-window, .toast, .badge-popup, .avatar-picker-popup { display: none !important; }
             body { background: white; }
         }
     </style>
@@ -319,21 +340,15 @@
 <body>
     <a href="#main-content" class="skip-link">🌈 Перейти до календаря</a>
     
-    <!-- ===== ІНКЛЮЗИВНА ПАНЕЛЬ ===== -->
     <div class="a11y-panel" role="toolbar" aria-label="Налаштування доступності">
-        <button class="a11y-btn" onclick="app.toggleA11y('highContrast')" id="btn-contrast" 
-                aria-label="Високий контраст" aria-pressed="false" title="Високий контраст">🎨</button>
-        <button class="a11y-btn" onclick="app.toggleA11y('largeText')" id="btn-large" 
-                aria-label="Великий текст" aria-pressed="false" title="Великий текст">🔍</button>
-        <button class="a11y-btn" onclick="app.toggleA11y('dyslexicFont')" id="btn-dyslexic" 
-                aria-label="Шрифт для дислексії" aria-pressed="false" title="Шрифт для дислексії">📖</button>
-        <button class="a11y-btn" onclick="app.toggleA11y('simplified')" id="btn-simple" 
-                aria-label="Спрощений режим" aria-pressed="false" title="Спрощений режим">🧒</button>
+        <button class="a11y-btn" onclick="app.toggleA11y('highContrast')" id="btn-contrast" aria-label="Високий контраст" aria-pressed="false" title="Високий контраст">🎨</button>
+        <button class="a11y-btn" onclick="app.toggleA11y('largeText')" id="btn-large" aria-label="Великий текст" aria-pressed="false" title="Великий текст">🔍</button>
+        <button class="a11y-btn" onclick="app.toggleA11y('dyslexicFont')" id="btn-dyslexic" aria-label="Шрифт для дислексії" aria-pressed="false" title="Шрифт для дислексії">📖</button>
+        <button class="a11y-btn" onclick="app.toggleA11y('simplified')" id="btn-simple" aria-label="Спрощений режим" aria-pressed="false" title="Спрощений режим">🧒</button>
     </div>
     
     <div class="app-container">
         
-        <!-- HEADER -->
         <header class="app-header" role="banner">
             <h1 class="app-title" id="app-title">🌈 WeatherLab НУШ</h1>
             <p class="app-subtitle" id="app-subtitle">🌍 Метеорологічний календар • Географія • 5-6 класи</p>
@@ -343,38 +358,24 @@
             </div>
         </header>
         
-        <!-- LOCATION -->
         <section class="panel location-panel" aria-labelledby="loc-label">
             <span id="loc-label" style="font-size:1.3rem;">📍</span>
-            <input type="text" id="location-input" class="input location-input" 
-                   placeholder="🏙️ Введи назву міста..." aria-label="Місто для спостережень">
-            <button class="btn btn-primary" onclick="app.detectLocation()" id="geo-btn">
-                📡 <span id="geo-text">Визначити геолокацію</span>
-            </button>
+            <input type="text" id="location-input" class="input location-input" placeholder="🏙️ Введи назву міста..." aria-label="Місто для спостережень">
+            <button class="btn btn-primary" onclick="app.detectLocation()" id="geo-btn">📡 <span id="geo-text">Визначити геолокацію</span></button>
             <span id="location-status" style="font-weight:600;" aria-live="polite"></span>
         </section>
         
-        <!-- STUDENT INFO + AVATAR -->
         <section class="panel student-panel" aria-labelledby="stu-label" style="position:relative;">
             <span id="stu-label" style="font-size:1.3rem;">🧑‍🔬</span>
-            
-            <!-- АВАТАР -->
             <div class="avatar-section">
-                <div class="avatar-display" id="avatar-display" 
-                     onclick="app.toggleAvatarPicker()" 
-                     tabindex="0" role="button" 
-                     aria-label="Обрати аватар">🦊</div>
+                <div class="avatar-display" id="avatar-display" onclick="app.toggleAvatarPicker()" tabindex="0" role="button" aria-label="Обрати аватар">🦊</div>
                 <div class="avatar-picker-popup" id="avatar-picker-popup"></div>
             </div>
-            
-            <input type="text" id="student-name" class="input student-input" 
-                   placeholder="Ім'я та прізвище" aria-label="Ім'я учня">
-            <input type="text" id="student-class" class="input student-input" 
-                   placeholder="Клас (5-А)" aria-label="Клас" style="width:120px;">
+            <input type="text" id="student-name" class="input student-input" placeholder="Ім'я та прізвище" aria-label="Ім'я учня">
+            <input type="text" id="student-class" class="input student-input" placeholder="Клас (5-А)" aria-label="Клас" style="width:120px;">
             <button class="btn btn-primary" onclick="app.saveStudentInfo()">💾 <span id="save-text">Зберегти</span></button>
         </section>
         
-        <!-- MAIN CALENDAR -->
         <main id="main-content" class="main-content" aria-label="Календар погоди">
             <div class="month-navigation">
                 <button class="nav-btn" onclick="app.changeMonth(-1)" aria-label="Попередній місяць">←</button>
@@ -393,22 +394,23 @@
             <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Календар"></div>
             
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="app.compareWithRealData()">
-                    🔬 <span id="compare-text">Порівняти з реальними даними</span>
-                </button>
-                <button class="btn btn-success" onclick="app.generatePDFReport()">
-                    📄 <span id="pdf-text">Створити звіт (PDF)</span>
-                </button>
-                <button class="btn btn-secondary" onclick="app.saveReportAsFile()">
-                    💾 <span id="save-report-text">Зберегти звіт CSV</span>
-                </button>
-                <button class="btn btn-secondary" onclick="app.printReport()">
-                    🖨️ <span id="print-text">Друк</span>
-                </button>
+                <button class="btn btn-primary" onclick="app.compareWithRealData()">🔬 <span id="compare-text">Порівняти з real даними</span></button>
+                <button class="btn btn-warning" onclick="app.openSinoptik()">🌐 <span id="sinoptik-text">Відкрити Sinoptik</span></button>
+                <button class="btn btn-success" onclick="app.generatePDFReport()">📄 <span id="pdf-text">Звіт PDF</span></button>
+                <button class="btn btn-secondary" onclick="app.saveReportAsFile()">💾 <span id="save-report-text">Звіт CSV</span></button>
+                <button class="btn btn-secondary" onclick="app.printReport()">🖨️ <span id="print-text">Друк</span></button>
+            </div>
+            
+            <!-- Синоптік вікно -->
+            <div class="sinoptik-window" id="sinoptik-window" hidden>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-md);">
+                    <h3>🌐 Sinoptik.ua — <span id="sinoptik-city">Погода</span></h3>
+                    <button class="btn btn-sm btn-secondary" onclick="document.getElementById('sinoptik-window').hidden=true">✕ <span id="close-sinoptik">Закрити</span></button>
+                </div>
+                <iframe id="sinoptik-iframe" src="about:blank" title="Sinoptik погода" sandbox="allow-scripts allow-same-origin allow-popups" loading="lazy"></iframe>
             </div>
         </main>
         
-        <!-- STATS + WEATHER WINDOW -->
         <aside class="stats-panel" aria-label="Статистика та погода">
             <h2>📊 <span id="stats-title">Статистика місяця</span></h2>
             <div class="stats-grid">
@@ -416,54 +418,45 @@
                 <div class="stat-card"><div class="stat-emoji">🌡️</div><div class="stat-value" id="stat-avg-temp">--°C</div><div class="stat-label" id="stat-temp-label">середня t°</div></div>
                 <div class="stat-card"><div class="stat-emoji">☀️</div><div class="stat-value" id="stat-sunny">0</div><div class="stat-label" id="stat-sunny-label">сонячних</div></div>
                 <div class="stat-card"><div class="stat-emoji">💨</div><div class="stat-value" id="stat-windy">0</div><div class="stat-label" id="stat-windy-label">вітряних</div></div>
+                <div class="stat-card"><div class="stat-emoji">💧</div><div class="stat-value" id="stat-humidity">--%</div><div class="stat-label" id="stat-humidity-label">вологість</div></div>
+                <div class="stat-card"><div class="stat-emoji">🔵</div><div class="stat-value" id="stat-pressure">--</div><div class="stat-label" id="stat-pressure-label">тиск</div></div>
                 <div class="stat-card"><div class="stat-emoji">🔥</div><div class="stat-value" id="stat-streak">0</div><div class="stat-label" id="stat-streak-label">днів підряд</div></div>
                 <div class="stat-card"><div class="stat-emoji">🎯</div><div class="stat-value" id="stat-accuracy">--%</div><div class="stat-label" id="stat-acc-label">точність</div></div>
             </div>
             
-            <!-- ДОСЯГНЕННЯ -->
             <div style="margin-top:var(--space-lg);">
                 <h3>🏆 <span id="badges-title">Мої досягнення</span></h3>
                 <div id="badges-container" style="display:flex;flex-wrap:wrap;gap:var(--space-sm);margin-top:var(--space-sm);"></div>
             </div>
             
-            <!-- WEATHER IFRAME -->
             <div class="weather-window">
-                <h3>🌐 <span id="weather-window-title">Реальна погода у твоєму місті</span></h3>
-                <iframe id="weather-iframe" src="about:blank"
-                        title="Реальна погода" 
-                        sandbox="allow-scripts allow-same-origin allow-popups"
-                        loading="lazy"></iframe>
-                <p style="font-size:0.75rem;color:var(--gray-500);margin-top:var(--space-xs);">
-                    <span id="weather-source-text">Дані з</span> 
-                    <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> | 
-                    <a href="https://www.ventusky.com/" target="_blank" rel="noopener">Ventusky</a>
-                </p>
+                <h3>🌐 <span id="weather-window-title">Реальна погода (Ventusky)</span></h3>
+                <iframe id="weather-iframe" src="about:blank" title="Ventusky погода" sandbox="allow-scripts allow-same-origin allow-popups" loading="lazy"></iframe>
             </div>
             
             <div id="comparison-results" style="margin-top:var(--space-lg);" aria-live="polite"></div>
         </aside>
         
-        <!-- METHODOLOGY -->
         <section class="panel methodology-panel" aria-labelledby="method-title">
             <h2 id="method-title">📋 НУШ 5-6 класи</h2>
             <p id="method-subjects"><strong>Предмети:</strong> 🌍 Географія • 🔬 Природничі науки</p>
-            <ul style="list-style:none;padding:0;" id="method-list">
+            <ul style="list-style:none;padding:0;">
                 <li>✅ <strong>ПРО 1.1</strong> — Дослідження природних явищ</li>
-                <li>✅ <strong>ПРО 1.2</strong> — Фіксація результатів спостережень</li>
-                <li>✅ <strong>ПРО 2.1</strong> — Аналіз та порівняння даних</li>
+                <li>✅ <strong>ПРО 1.2</strong> — Фіксація результатів</li>
+                <li>✅ <strong>ПРО 2.1</strong> — Аналіз даних</li>
                 <li>✅ <strong>ГЕО 1.1</strong> — Атмосфера, погода, клімат</li>
-                <li>✅ <strong>ГЕО 2.1</strong> — Метеорологічні спостереження</li>
-                <li>✅ <strong>МАО 2.3</strong> — Таблиці, графіки, діаграми</li>
+                <li>✅ <strong>ГЕО 2.1</strong> — Метеоспостереження</li>
+                <li>✅ <strong>МАО 2.3</strong> — Таблиці, графіки</li>
             </ul>
-            <p style="margin-top:var(--space-md);"><strong>♿</strong> <span id="a11y-info">WCAG 2.2 AA • Screen reader • Клавіатура • Контраст • Дислексія</span></p>
+            <p style="margin-top:var(--space-md);"><strong>♿</strong> WCAG 2.2 AA • Screen reader • Клавіатура • Контраст • Дислексія</p>
         </section>
         
         <footer class="app-footer" role="contentinfo">
-            <p>🌈 WeatherLab НУШ v2.3 • PWA • WCAG 2.2 AA • 5-6 класи</p>
+            <p>🌈 WeatherLab НУШ v2.4 • PWA • WCAG 2.2 AA • 5-6 класи • Sinoptik + Ventusky + Open-Meteo</p>
         </footer>
     </div>
     
-    <!-- WEATHER MODAL -->
+    <!-- WEATHER MODAL (розширений) -->
     <div class="modal-overlay" id="weather-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
         <div class="modal-content">
             <button class="modal-close" onclick="app.closeModal()" aria-label="Закрити">✕</button>
@@ -471,40 +464,89 @@
             <p id="modal-date" style="text-align:center;color:var(--gray-500);"></p>
             
             <form onsubmit="app.saveWeatherRecord(event)" novalidate>
+                <!-- Температура -->
                 <div class="form-group">
                     <label class="form-label">🌡️ <span id="temp-label">Температура (°C):</span></label>
                     <div style="display:flex;align-items:center;gap:var(--space-sm);">
-                        <button type="button" class="btn btn-secondary" onclick="app.adjustTemp(-1)" style="min-width:44px;" aria-label="Зменшити">−</button>
-                        <input type="number" id="temp-input" class="input" step="0.5" placeholder="0" 
-                               style="text-align:center;font-size:1.5rem;font-weight:700;max-width:120px;"
-                               min="-50" max="50" aria-required="true">
-                        <button type="button" class="btn btn-secondary" onclick="app.adjustTemp(1)" style="min-width:44px;" aria-label="Збільшити">+</button>
+                        <button type="button" class="btn btn-secondary" onclick="app.adjustTemp(-1)" style="min-width:44px;">−</button>
+                        <input type="number" id="temp-input" class="input" step="0.5" placeholder="0" style="text-align:center;font-size:1.5rem;font-weight:700;max-width:120px;" min="-50" max="50">
+                        <button type="button" class="btn btn-secondary" onclick="app.adjustTemp(1)" style="min-width:44px;">+</button>
                     </div>
                 </div>
+                
+                <!-- Відчувається як -->
+                <div class="form-group">
+                    <label class="form-label">🥶 <span id="feels-label">Відчувається як (°C):</span></label>
+                    <input type="number" id="feels-input" class="input" step="0.5" placeholder="Напр. -2" style="max-width:150px;text-align:center;">
+                </div>
+                
+                <!-- Погода -->
                 <div class="form-group">
                     <label class="form-label">☁️ <span id="weather-type-label">Тип погоди:</span></label>
                     <div class="emoji-grid" id="weather-picker"></div>
                 </div>
-                <div class="form-group">
+                
+                <!-- Деталі погоди (як на Sinoptik) -->
+                <div class="weather-detail-grid">
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">💧</div>
+                        <label class="form-label" for="humidity-input"><span id="humidity-label">Вологість</span> (%)</label>
+                        <input type="number" id="humidity-input" class="input" min="0" max="100" placeholder="65" style="text-align:center;">
+                    </div>
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">🔵</div>
+                        <label class="form-label" for="pressure-input"><span id="pressure-label">Тиск</span> (мм)</label>
+                        <input type="number" id="pressure-input" class="input" min="700" max="800" placeholder="760" style="text-align:center;">
+                    </div>
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">👁️</div>
+                        <label class="form-label" for="visibility-input"><span id="visibility-label">Видимість</span> (км)</label>
+                        <input type="number" id="visibility-input" class="input" min="0" max="50" placeholder="10" style="text-align:center;">
+                    </div>
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">☁️</div>
+                        <label class="form-label" for="cloudiness-input"><span id="cloudiness-label">Хмарність</span> (%)</label>
+                        <input type="number" id="cloudiness-input" class="input" min="0" max="100" placeholder="30" style="text-align:center;">
+                    </div>
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">🌅</div>
+                        <label class="form-label" for="uv-input"><span id="uv-label">УФ-індекс</span></label>
+                        <input type="number" id="uv-input" class="input" min="0" max="11" placeholder="3" style="text-align:center;">
+                    </div>
+                    <div class="weather-detail-item">
+                        <div class="weather-detail-emoji">🌧️</div>
+                        <label class="form-label" for="precip-input"><span id="precip-label">Опади</span> (мм)</label>
+                        <input type="number" id="precip-input" class="input" min="0" max="200" placeholder="0" style="text-align:center;">
+                    </div>
+                </div>
+                
+                <!-- Вітер -->
+                <div class="form-group" style="margin-top:var(--space-lg);">
                     <label class="form-label">💨 <span id="wind-dir-label">Напрям вітру:</span></label>
                     <div class="wind-grid" id="wind-picker"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">💨 <span id="wind-speed-label">Швидкість вітру (м/с):</span></label>
-                    <input type="range" id="wind-speed-range" min="0" max="20" step="0.5" value="0" 
-                           style="width:100%;" oninput="document.getElementById('wind-speed-val').textContent=this.value"
-                           aria-label="Швидкість вітру">
+                    <input type="range" id="wind-speed-range" min="0" max="20" step="0.5" value="0" style="width:100%;" oninput="document.getElementById('wind-speed-val').textContent=this.value">
                     <strong id="wind-speed-val">0</strong> м/с
                 </div>
+                <div class="form-group">
+                    <label class="form-label">🌬️ <span id="gust-label">Пориви вітру (м/с):</span></label>
+                    <input type="number" id="gust-input" class="input" min="0" max="50" step="0.5" placeholder="0" style="max-width:150px;text-align:center;">
+                </div>
+                
+                <!-- Настрій -->
                 <div class="form-group">
                     <label class="form-label">😊 <span id="mood-label">Настрій:</span></label>
                     <div class="emoji-grid" id="mood-picker"></div>
                 </div>
+                
+                <!-- Нотатки -->
                 <div class="form-group">
                     <label class="form-label">📝 <span id="notes-label">Нотатки:</span></label>
-                    <textarea id="notes-input" class="input" rows="3" 
-                              placeholder="Що цікавого помітив?" maxlength="300" aria-label="Нотатки"></textarea>
+                    <textarea id="notes-input" class="input" rows="3" placeholder="Що цікавого помітив?" maxlength="300"></textarea>
                 </div>
+                
                 <div style="display:flex;gap:var(--space-md);margin-top:var(--space-xl);flex-wrap:wrap;">
                     <button type="submit" class="btn btn-primary">💾 <span id="save-btn-text">Зберегти</span></button>
                     <button type="button" class="btn btn-secondary" onclick="app.closeModal()"><span id="cancel-btn-text">Скасувати</span></button>
@@ -515,66 +557,60 @@
     </div>
     
     <script>
-    // ============================================================
-    // WEATHERLAB НУШ v2.3 — З АВАТАРАМИ, ДОСЯГНЕННЯМИ, UK/EN, ІНКЛЮЗІЄЮ
-    // ============================================================
-    
     const L = {
         uk: {
-            appTitle: '🌈 WeatherLab НУШ', appSubtitle: '🌍 Метеорологічний календар • Географія • 5-6 класи',
-            geoText: 'Визначити геолокацію', saveText: 'Зберегти', todayText: 'Сьогодні',
-            compareText: 'Порівняти з реальними даними', pdfText: 'Створити звіт (PDF)',
-            saveReportText: 'Зберегти звіт CSV', printText: 'Друк',
-            statsTitle: 'Статистика місяця',
-            statDaysLabel: 'днів', statTempLabel: 'середня t°', statSunnyLabel: 'сонячних',
-            statWindyLabel: 'вітряних', statStreakLabel: 'днів підряд', statAccLabel: 'точність',
-            badgesTitle: 'Мої досягнення',
-            weatherWindowTitle: 'Реальна погода у твоєму місті', weatherSourceText: 'Дані з',
-            methodTitle: '📋 НУШ 5-6 класи',
-            methodSubjects: '<strong>Предмети:</strong> 🌍 Географія • 🔬 Природничі науки',
-            a11yInfo: 'WCAG 2.2 AA • Screen reader • Клавіатура • Контраст • Дислексія',
-            modalTitleText: 'Запис погоди', tempLabel: 'Температура (°C):',
-            weatherTypeLabel: 'Тип погоди:', windDirLabel: 'Напрям вітру:',
-            windSpeedLabel: 'Швидкість вітру (м/с):', moodLabel: 'Настрій:', notesLabel: 'Нотатки:',
-            saveBtnText: 'Зберегти', cancelBtnText: 'Скасувати', deleteBtnText: 'Видалити',
-            toastSaved: '✅ Збережено!', toastDeleted: '🗑️ Видалено',
-            toastStudentSaved: '✅ Дані збережено!', toastLocation: '✅ Локацію визначено: ',
-            alertTemp: 'Введи температуру від -50 до +50!', alertFields: 'Заповни всі поля!',
-            alertLocation: 'Спочатку визнач локацію!', alertDelete: 'Видалити цей запис?',
-            locationPlaceholder: '🏙️ Введи назву міста...', namePlaceholder: 'Ім\'я та прізвище',
-            classPlaceholder: 'Клас (5-А)', notesPlaceholder: 'Що цікавого помітив?',
-            badgeFirst: '🌱 Перше спостереження!', badgeWeek: '⭐ Тижневий метеоролог!',
-            badgeMonth: '👑 Професійний кліматолог!', badgeSunny: '☀️ Сонячний друг!',
-            badgeRain: '☔ Дощовий експерт!', badgeStreak: '🔥 7 днів підряд!',
-            noBadges: 'Заповнюй календар щодня, щоб отримати досягнення! 🌟'
+            appTitle:'🌈 WeatherLab НУШ',appSubtitle:'🌍 Метеокалендар • Географія • 5-6 класи',
+            geoText:'Визначити геолокацію',saveText:'Зберегти',todayText:'Сьогодні',
+            compareText:'Порівняти з real даними',pdfText:'Звіт PDF',saveReportText:'Звіт CSV',
+            printText:'Друк',sinoptikText:'Відкрити Sinoptik',closeSinoptik:'Закрити',
+            statsTitle:'Статистика місяця',statDaysLabel:'днів',statTempLabel:'середня t°',
+            statSunnyLabel:'сонячних',statWindyLabel:'вітряних',statHumidityLabel:'вологість',
+            statPressureLabel:'тиск',statStreakLabel:'днів підряд',statAccLabel:'точність',
+            badgesTitle:'Мої досягнення',weatherWindowTitle:'Ventusky погода',
+            methodTitle:'📋 НУШ 5-6 класи',
+            methodSubjects:'<strong>Предмети:</strong> 🌍 Географія • 🔬 Природничі науки',
+            modalTitleText:'Запис погоди',tempLabel:'Температура (°C):',feelsLabel:'Відчувається як (°C):',
+            weatherTypeLabel:'Тип погоди:',humidityLabel:'Вологість',pressureLabel:'Тиск',
+            visibilityLabel:'Видимість',cloudinessLabel:'Хмарність',uvLabel:'УФ-індекс',
+            precipLabel:'Опади',windDirLabel:'Напрям вітру:',windSpeedLabel:'Швидкість вітру (м/с):',
+            gustLabel:'Пориви вітру (м/с):',moodLabel:'Настрій:',notesLabel:'Нотатки:',
+            saveBtnText:'Зберегти',cancelBtnText:'Скасувати',deleteBtnText:'Видалити',
+            toastSaved:'✅ Збережено!',toastDeleted:'🗑️ Видалено',toastStudentSaved:'✅ Дані збережено!',
+            toastLocation:'✅ Локацію визначено: ',alertTemp:'Введи температуру від -50 до +50!',
+            alertFields:'Заповни всі поля!',alertLocation:'Спочатку визнач локацію!',
+            alertDelete:'Видалити цей запис?',locationPlaceholder:'🏙️ Введи назву міста...',
+            namePlaceholder:'Ім\'я та прізвище',classPlaceholder:'Клас (5-А)',
+            notesPlaceholder:'Що цікавого помітив?',
+            badgeFirst:'🌱 Перше спостереження!',badgeWeek:'⭐ Тижневий метеоролог!',
+            badgeMonth:'👑 Професійний кліматолог!',badgeSunny:'☀️ Сонячний друг!',
+            badgeRain:'☔ Дощовий експерт!',badgeStreak:'🔥 7 днів підряд!',
+            noBadges:'Заповнюй календар щодня! 🌟'
         },
         en: {
-            appTitle: '🌈 WeatherLab NUS', appSubtitle: '🌍 Weather Calendar • Geography • Grades 5-6',
-            geoText: 'Detect Location', saveText: 'Save', todayText: 'Today',
-            compareText: 'Compare with Real Data', pdfText: 'Create Report (PDF)',
-            saveReportText: 'Save Report CSV', printText: 'Print',
-            statsTitle: 'Monthly Statistics',
-            statDaysLabel: 'days', statTempLabel: 'avg temp', statSunnyLabel: 'sunny',
-            statWindyLabel: 'windy', statStreakLabel: 'streak', statAccLabel: 'accuracy',
-            badgesTitle: 'My Achievements',
-            weatherWindowTitle: 'Real Weather in Your City', weatherSourceText: 'Data from',
-            methodTitle: '📋 NUS Grades 5-6',
-            methodSubjects: '<strong>Subjects:</strong> 🌍 Geography • 🔬 Natural Sciences',
-            a11yInfo: 'WCAG 2.2 AA • Screen reader • Keyboard • Contrast • Dyslexia',
-            modalTitleText: 'Weather Record', tempLabel: 'Temperature (°C):',
-            weatherTypeLabel: 'Weather Type:', windDirLabel: 'Wind Direction:',
-            windSpeedLabel: 'Wind Speed (m/s):', moodLabel: 'Mood:', notesLabel: 'Notes:',
-            saveBtnText: 'Save', cancelBtnText: 'Cancel', deleteBtnText: 'Delete',
-            toastSaved: '✅ Saved!', toastDeleted: '🗑️ Deleted',
-            toastStudentSaved: '✅ Data saved!', toastLocation: '✅ Location detected: ',
-            alertTemp: 'Enter temperature from -50 to +50!', alertFields: 'Fill in all fields!',
-            alertLocation: 'Set your location first!', alertDelete: 'Delete this record?',
-            locationPlaceholder: '🏙️ Enter city name...', namePlaceholder: 'Full Name',
-            classPlaceholder: 'Grade (5-A)', notesPlaceholder: 'What did you notice?',
-            badgeFirst: '🌱 First Observation!', badgeWeek: '⭐ Weekly Meteorologist!',
-            badgeMonth: '👑 Professional Climatologist!', badgeSunny: '☀️ Sun Lover!',
-            badgeRain: '☔ Rain Expert!', badgeStreak: '🔥 7-Day Streak!',
-            noBadges: 'Fill the calendar daily to earn achievements! 🌟'
+            appTitle:'🌈 WeatherLab NUS',appSubtitle:'🌍 Weather Calendar • Geography • 5-6',
+            geoText:'Detect Location',saveText:'Save',todayText:'Today',
+            compareText:'Compare with Real Data',pdfText:'PDF Report',saveReportText:'CSV Report',
+            printText:'Print',sinoptikText:'Open Sinoptik',closeSinoptik:'Close',
+            statsTitle:'Monthly Statistics',statDaysLabel:'days',statTempLabel:'avg temp',
+            statSunnyLabel:'sunny',statWindyLabel:'windy',statHumidityLabel:'humidity',
+            statPressureLabel:'pressure',statStreakLabel:'streak',statAccLabel:'accuracy',
+            badgesTitle:'My Achievements',weatherWindowTitle:'Ventusky Weather',
+            methodTitle:'📋 NUS 5-6',methodSubjects:'<strong>Subjects:</strong> 🌍 Geography • 🔬 Science',
+            modalTitleText:'Weather Record',tempLabel:'Temperature (°C):',feelsLabel:'Feels like (°C):',
+            weatherTypeLabel:'Weather Type:',humidityLabel:'Humidity',pressureLabel:'Pressure',
+            visibilityLabel:'Visibility',cloudinessLabel:'Cloudiness',uvLabel:'UV Index',
+            precipLabel:'Precipitation',windDirLabel:'Wind Direction:',windSpeedLabel:'Wind Speed (m/s):',
+            gustLabel:'Wind Gusts (m/s):',moodLabel:'Mood:',notesLabel:'Notes:',
+            saveBtnText:'Save',cancelBtnText:'Cancel',deleteBtnText:'Delete',
+            toastSaved:'✅ Saved!',toastDeleted:'🗑️ Deleted',toastStudentSaved:'✅ Data saved!',
+            toastLocation:'✅ Location: ',alertTemp:'Enter temp -50 to +50!',
+            alertFields:'Fill all fields!',alertLocation:'Set location first!',
+            alertDelete:'Delete this record?',locationPlaceholder:'🏙️ Enter city...',
+            namePlaceholder:'Full Name',classPlaceholder:'Grade (5-A)',
+            notesPlaceholder:'What did you notice?',
+            badgeFirst:'🌱 First!',badgeWeek:'⭐ Weekly!',badgeMonth:'👑 Pro!',
+            badgeSunny:'☀️ Sunny!',badgeRain:'☔ Rain!',badgeStreak:'🔥 7-Day!',
+            noBadges:'Fill calendar daily! 🌟'
         }
     };
     
@@ -611,7 +647,6 @@
                 {v:'Пн',e:'↑'},{v:'Пд',e:'↓'},{v:'Зх',e:'←'},{v:'Сх',e:'→'},
                 {v:'ПнЗх',e:'↖'},{v:'ПнСх',e:'↗'},{v:'ПдЗх',e:'↙'},{v:'ПдСх',e:'↘'}
             ];
-            
             this.badgeDefs = [
                 {id:'first',cond:s=>s.total>=1,emoji:'🌱',uk:'Перше спостереження!',en:'First Observation!'},
                 {id:'week',cond:s=>s.total>=7,emoji:'⭐',uk:'Тижневий метеоролог!',en:'Weekly Meteorologist!'},
@@ -627,19 +662,12 @@
         t(key) { return L[this.lang]?.[key] || L.uk[key] || key; }
         
         init() {
-            this.applyA11y();
-            this.applyLang();
-            this.initPickers();
-            this.initAvatarPicker();
-            this.renderCalendar();
-            this.updateStats();
-            this.loadSavedData();
-            this.updateWeatherIframe();
-            this.renderBadges();
+            this.applyA11y(); this.applyLang(); this.initPickers(); this.initAvatarPicker();
+            this.renderCalendar(); this.updateStats(); this.loadSavedData();
+            this.updateWeatherIframe(); this.renderBadges();
             
             document.getElementById('current-month-label').textContent = 
                 `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
-            
             document.getElementById('avatar-display').textContent = this.avatar;
             
             document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -648,9 +676,7 @@
                     localStorage.setItem('wl_lang', this.lang);
                     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    this.applyLang();
-                    this.renderCalendar();
-                    this.updateWeatherIframe();
+                    this.applyLang(); this.renderCalendar(); this.updateWeatherIframe();
                     this.renderBadges();
                     document.getElementById('current-month-label').textContent = 
                         `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
@@ -673,60 +699,40 @@
             document.body.classList.toggle('large-text', this.a11y.largeText);
             document.body.classList.toggle('dyslexic-font', this.a11y.dyslexicFont);
             document.body.classList.toggle('simplified', this.a11y.simplified);
-            
             ['contrast','large','dyslexic','simple'].forEach((k,i) => {
                 const keys = ['highContrast','largeText','dyslexicFont','simplified'];
                 const btn = document.getElementById('btn-'+k);
-                if (btn) {
-                    btn.setAttribute('aria-pressed', this.a11y[keys[i]]);
-                    btn.classList.toggle('active', this.a11y[keys[i]]);
-                }
+                if (btn) { btn.setAttribute('aria-pressed', this.a11y[keys[i]]); btn.classList.toggle('active', this.a11y[keys[i]]); }
             });
-            
             if (this.a11y.dyslexicFont && !document.getElementById('dyslexic-css')) {
-                const link = document.createElement('link');
-                link.id = 'dyslexic-css';
-                link.rel = 'stylesheet';
-                link.href = 'https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.css';
+                const link = document.createElement('link'); link.id = 'dyslexic-css';
+                link.rel = 'stylesheet'; link.href = 'https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.css';
                 document.head.appendChild(link);
             }
         }
-        
-        toggleA11y(setting) {
-            this.a11y[setting] = !this.a11y[setting];
-            localStorage.setItem('wl_a11y', JSON.stringify(this.a11y));
-            this.applyA11y();
-        }
+        toggleA11y(s) { this.a11y[s] = !this.a11y[s]; localStorage.setItem('wl_a11y', JSON.stringify(this.a11y)); this.applyA11y(); }
         
         applyLang() {
             document.documentElement.lang = this.lang;
-            document.querySelectorAll('.lang-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.lang === this.lang);
-                b.setAttribute('aria-checked', b.dataset.lang === this.lang);
-            });
-            
+            document.querySelectorAll('.lang-btn').forEach(b => { b.classList.toggle('active', b.dataset.lang === this.lang); b.setAttribute('aria-checked', b.dataset.lang === this.lang); });
             const ids = {
-                'app-title':'appTitle','app-subtitle':'appSubtitle','geo-text':'geoText',
-                'save-text':'saveText','today-text':'todayText','compare-text':'compareText',
-                'pdf-text':'pdfText','save-report-text':'saveReportText','print-text':'printText',
-                'stats-title':'statsTitle','stat-days-label':'statDaysLabel',
-                'stat-temp-label':'statTempLabel','stat-sunny-label':'statSunnyLabel',
-                'stat-windy-label':'statWindyLabel','stat-streak-label':'statStreakLabel',
-                'stat-acc-label':'statAccLabel','badges-title':'badgesTitle',
-                'weather-window-title':'weatherWindowTitle','weather-source-text':'weatherSourceText',
-                'method-title':'methodTitle','a11y-info':'a11yInfo',
-                'modal-title-text':'modalTitleText','temp-label':'tempLabel',
-                'weather-type-label':'weatherTypeLabel','wind-dir-label':'windDirLabel',
-                'wind-speed-label':'windSpeedLabel','mood-label':'moodLabel',
-                'notes-label':'notesLabel','save-btn-text':'saveBtnText',
+                'app-title':'appTitle','app-subtitle':'appSubtitle','geo-text':'geoText','save-text':'saveText',
+                'today-text':'todayText','compare-text':'compareText','pdf-text':'pdfText',
+                'save-report-text':'saveReportText','print-text':'printText','sinoptik-text':'sinoptikText',
+                'close-sinoptik':'closeSinoptik','stats-title':'statsTitle','stat-days-label':'statDaysLabel',
+                'stat-temp-label':'statTempLabel','stat-sunny-label':'statSunnyLabel','stat-windy-label':'statWindyLabel',
+                'stat-humidity-label':'statHumidityLabel','stat-pressure-label':'statPressureLabel',
+                'stat-streak-label':'statStreakLabel','stat-acc-label':'statAccLabel','badges-title':'badgesTitle',
+                'weather-window-title':'weatherWindowTitle','method-title':'methodTitle',
+                'modal-title-text':'modalTitleText','temp-label':'tempLabel','feels-label':'feelsLabel',
+                'weather-type-label':'weatherTypeLabel','humidity-label':'humidityLabel',
+                'pressure-label':'pressureLabel','visibility-label':'visibilityLabel',
+                'cloudiness-label':'cloudinessLabel','uv-label':'uvLabel','precip-label':'precipLabel',
+                'wind-dir-label':'windDirLabel','wind-speed-label':'windSpeedLabel','gust-label':'gustLabel',
+                'mood-label':'moodLabel','notes-label':'notesLabel','save-btn-text':'saveBtnText',
                 'cancel-btn-text':'cancelBtnText','delete-btn-text':'deleteBtnText'
             };
-            
-            Object.entries(ids).forEach(([id,key]) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = this.t(key);
-            });
-            
+            Object.entries(ids).forEach(([id,key]) => { const el = document.getElementById(id); if (el) el.textContent = this.t(key); });
             document.getElementById('method-subjects').innerHTML = this.t('methodSubjects');
             document.getElementById('location-input').placeholder = this.t('locationPlaceholder');
             document.getElementById('student-name').placeholder = this.t('namePlaceholder');
@@ -736,166 +742,95 @@
         
         initAvatarPicker() {
             const picker = document.getElementById('avatar-picker-popup');
-            picker.innerHTML = AVATARS.map(a => 
-                `<button class="avatar-option-popup${a===this.avatar?' selected':''}" 
-                     data-avatar="${a}" onclick="app.selectAvatar('${a}')" 
-                     aria-label="Аватар ${a}">${a}</button>`
-            ).join('');
+            picker.innerHTML = AVATARS.map(a => `<button class="avatar-option-popup${a===this.avatar?' selected':''}" data-avatar="${a}" onclick="app.selectAvatar('${a}')">${a}</button>`).join('');
         }
-        
-        toggleAvatarPicker() {
-            const picker = document.getElementById('avatar-picker-popup');
-            picker.classList.toggle('show');
-        }
-        
-        selectAvatar(a) {
-            this.avatar = a;
-            localStorage.setItem('wl_avatar', a);
-            document.getElementById('avatar-display').textContent = a;
-            document.getElementById('avatar-picker-popup').classList.remove('show');
-            this.initAvatarPicker();
-        }
+        toggleAvatarPicker() { document.getElementById('avatar-picker-popup').classList.toggle('show'); }
+        selectAvatar(a) { this.avatar = a; localStorage.setItem('wl_avatar', a); document.getElementById('avatar-display').textContent = a; document.getElementById('avatar-picker-popup').classList.remove('show'); this.initAvatarPicker(); }
         
         initPickers() {
             const wp = document.getElementById('weather-picker');
-            wp.innerHTML = this.weatherEmojis.map(w => 
-                `<button type="button" class="emoji-option" data-v="${w.v}" 
-                     title="${this.lang==='uk'?w.l:w.le}" 
-                     onclick="app.selectEmoji(this,'weather-picker')">${w.v}</button>`
-            ).join('');
-            
+            wp.innerHTML = this.weatherEmojis.map(w => `<button type="button" class="emoji-option" data-v="${w.v}" title="${this.lang==='uk'?w.l:w.le}" onclick="app.selectEmoji(this,'weather-picker')">${w.v}</button>`).join('');
             const mp = document.getElementById('mood-picker');
-            mp.innerHTML = this.moodEmojis.map(m => 
-                `<button type="button" class="emoji-option" data-v="${m.v}" 
-                     title="${this.lang==='uk'?m.l:m.le}" 
-                     onclick="app.selectEmoji(this,'mood-picker')">${m.v}</button>`
-            ).join('');
-            
+            mp.innerHTML = this.moodEmojis.map(m => `<button type="button" class="emoji-option" data-v="${m.v}" title="${this.lang==='uk'?m.l:m.le}" onclick="app.selectEmoji(this,'mood-picker')">${m.v}</button>`).join('');
             const wdp = document.getElementById('wind-picker');
-            wdp.innerHTML = this.windDirs.map(w => 
-                `<button type="button" class="wind-btn" data-v="${w.v}" 
-                     title="${w.v}" onclick="app.selectWind(this)">${w.e}</button>`
-            ).join('');
-            
+            wdp.innerHTML = this.windDirs.map(w => `<button type="button" class="wind-btn" data-v="${w.v}" title="${w.v}" onclick="app.selectWind(this)">${w.e}</button>`).join('');
             wp.querySelector('.emoji-option')?.classList.add('selected');
             mp.querySelector('.emoji-option')?.classList.add('selected');
             wdp.querySelector('.wind-btn')?.classList.add('selected');
         }
-        
-        selectEmoji(el, pickerId) {
-            document.querySelectorAll(`#${pickerId} .emoji-option`).forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-        selectWind(el) {
-            document.querySelectorAll('#wind-picker .wind-btn').forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
-        }
+        selectEmoji(el, id) { document.querySelectorAll(`#${id} .emoji-option`).forEach(o => o.classList.remove('selected')); el.classList.add('selected'); }
+        selectWind(el) { document.querySelectorAll('#wind-picker .wind-btn').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); }
         
         loadSavedData() {
             const name = localStorage.getItem('wl_student_name');
             const cls = localStorage.getItem('wl_student_class');
             const loc = JSON.parse(localStorage.getItem('wl_location') || 'null');
-            
             if (name) document.getElementById('student-name').value = name;
             if (cls) document.getElementById('student-class').value = cls;
-            if (loc) {
-                document.getElementById('location-input').value = loc.name;
-                document.getElementById('location-status').textContent = '✅ ' + loc.name;
-            }
+            if (loc) { document.getElementById('location-input').value = loc.name; document.getElementById('location-status').textContent = '✅ ' + loc.name; }
         }
         
         renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            
+            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
             const firstDay = new Date(this.year, this.month, 1).getDay();
             const dim = new Date(this.year, this.month + 1, 0).getDate();
             const today = new Date();
             const isCurrent = today.getMonth() === this.month && today.getFullYear() === this.year;
             let offset = firstDay === 0 ? 6 : firstDay - 1;
-            
-            for (let i = 0; i < offset; i++) {
-                const d = document.createElement('div');
-                d.className = 'calendar-cell empty';
-                grid.appendChild(d);
-            }
-            
+            for (let i = 0; i < offset; i++) { const d = document.createElement('div'); d.className = 'calendar-cell empty'; grid.appendChild(d); }
             for (let d = 1; d <= dim; d++) {
-                const cell = document.createElement('div');
-                cell.className = 'calendar-cell';
-                cell.setAttribute('role', 'gridcell');
-                cell.setAttribute('tabindex', '0');
-                
+                const cell = document.createElement('div'); cell.className = 'calendar-cell';
+                cell.setAttribute('role','gridcell'); cell.setAttribute('tabindex','0');
                 const date = new Date(this.year, this.month, d);
                 const key = `wl_${this.year}_${this.month}_${d}`;
                 const data = JSON.parse(localStorage.getItem(key) || 'null');
-                
                 if (isCurrent && d === today.getDate()) cell.classList.add('today');
                 else if (date > today) cell.classList.add('future');
                 if (data) cell.classList.add('recorded');
-                
                 let html = `<div class="cell-date">${d}</div>`;
-                if (data) {
-                    html += `<div class="cell-emoji">${data.w}</div>`;
-                    html += `<div class="cell-temp">${data.t}°C</div>`;
-                }
+                if (data) { html += `<div class="cell-emoji">${data.w}</div>`; html += `<div class="cell-temp">${data.t}°C</div>`; }
                 cell.innerHTML = html;
-                
-                if (date <= today || data) {
-                    cell.addEventListener('click', () => this.openModal(d));
-                    cell.addEventListener('keydown', e => { if (e.key === 'Enter') this.openModal(d); });
-                }
+                if (date <= today || data) { cell.addEventListener('click', () => this.openModal(d)); cell.addEventListener('keydown', e => { if (e.key === 'Enter') this.openModal(d); }); }
                 grid.appendChild(cell);
             }
         }
         
         changeMonth(d) {
             this.month += d;
-            if (this.month < 0) { this.month = 11; this.year--; }
-            else if (this.month > 11) { this.month = 0; this.year++; }
-            
+            if (this.month < 0) { this.month = 11; this.year--; } else if (this.month > 11) { this.month = 0; this.year++; }
             const now = new Date();
-            if (new Date(this.year, this.month, 1) > now) {
-                this.month = now.getMonth();
-                this.year = now.getFullYear();
-            }
-            
-            document.getElementById('current-month-label').textContent = 
-                `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
-            this.renderCalendar();
-            this.updateStats();
-            this.renderBadges();
-            this.updateWeatherIframe();
+            if (new Date(this.year, this.month, 1) > now) { this.month = now.getMonth(); this.year = now.getFullYear(); }
+            document.getElementById('current-month-label').textContent = `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
+            this.renderCalendar(); this.updateStats(); this.renderBadges(); this.updateWeatherIframe();
         }
         
         goToToday() {
-            const now = new Date();
-            this.month = now.getMonth();
-            this.year = now.getFullYear();
-            document.getElementById('current-month-label').textContent = 
-                `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
-            this.renderCalendar();
-            this.updateStats();
-            this.renderBadges();
-            this.updateWeatherIframe();
+            const now = new Date(); this.month = now.getMonth(); this.year = now.getFullYear();
+            document.getElementById('current-month-label').textContent = `${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}`;
+            this.renderCalendar(); this.updateStats(); this.renderBadges(); this.updateWeatherIframe();
         }
         
         openModal(d) {
             this.day = d;
-            const modal = document.getElementById('weather-modal');
-            document.getElementById('modal-date').textContent = 
-                `${d} ${this.lang==='uk'?this.monthsGen[this.month]:this.monthsEn[this.month]} ${this.year}`;
-            
+            document.getElementById('modal-date').textContent = `${d} ${this.lang==='uk'?this.monthsGen[this.month]:this.monthsEn[this.month]} ${this.year}`;
             const key = `wl_${this.year}_${this.month}_${d}`;
             const data = JSON.parse(localStorage.getItem(key) || 'null');
             
+            // Заповнюємо всі поля
             document.getElementById('temp-input').value = data?.t || '';
-            document.getElementById('notes-input').value = data?.n || '';
+            document.getElementById('feels-input').value = data?.feels || '';
+            document.getElementById('humidity-input').value = data?.hum || '';
+            document.getElementById('pressure-input').value = data?.press || '';
+            document.getElementById('visibility-input').value = data?.vis || '';
+            document.getElementById('cloudiness-input').value = data?.cloud || '';
+            document.getElementById('uv-input').value = data?.uv || '';
+            document.getElementById('precip-input').value = data?.precip || '';
             document.getElementById('wind-speed-range').value = data?.ws || 0;
             document.getElementById('wind-speed-val').textContent = data?.ws || 0;
+            document.getElementById('gust-input').value = data?.gust || '';
+            document.getElementById('notes-input').value = data?.n || '';
             
-            document.querySelectorAll('#weather-picker .emoji-option, #mood-picker .emoji-option, #wind-picker .wind-btn')
-                .forEach(o => o.classList.remove('selected'));
+            document.querySelectorAll('#weather-picker .emoji-option, #mood-picker .emoji-option, #wind-picker .wind-btn').forEach(o => o.classList.remove('selected'));
             
             if (data) {
                 document.querySelector(`#weather-picker [data-v="${data.w}"]`)?.classList.add('selected');
@@ -909,24 +844,13 @@
                 document.getElementById('delete-record-btn').hidden = true;
             }
             
-            modal.hidden = false;
-            modal.style.display = 'flex';
+            document.getElementById('weather-modal').hidden = false;
+            document.getElementById('weather-modal').style.display = 'flex';
             setTimeout(() => document.getElementById('temp-input').focus(), 100);
         }
         
-        closeModal() {
-            const modal = document.getElementById('weather-modal');
-            modal.hidden = true;
-            modal.style.display = 'none';
-        }
-        
-        adjustTemp(d) {
-            const inp = document.getElementById('temp-input');
-            let v = parseFloat(inp.value) || 0;
-            v = Math.round((v + d) * 2) / 2;
-            v = Math.max(-50, Math.min(50, v));
-            inp.value = v;
-        }
+        closeModal() { const m = document.getElementById('weather-modal'); m.hidden = true; m.style.display = 'none'; }
+        adjustTemp(d) { const inp = document.getElementById('temp-input'); let v = parseFloat(inp.value) || 0; v = Math.round((v + d) * 2) / 2; v = Math.max(-50, Math.min(50, v)); inp.value = v; }
         
         saveWeatherRecord(e) {
             e.preventDefault();
@@ -939,55 +863,58 @@
             if (!wEl || !mEl || !wdEl) { alert(this.t('alertFields')); return; }
             
             const data = {
-                t: temp, w: wEl.dataset.v, m: mEl.dataset.v,
+                t: temp,
+                feels: parseFloat(document.getElementById('feels-input').value) || null,
+                w: wEl.dataset.v,
+                m: mEl.dataset.v,
                 wd: wdEl.dataset.v,
                 ws: parseFloat(document.getElementById('wind-speed-range').value) || 0,
+                gust: parseFloat(document.getElementById('gust-input').value) || null,
+                hum: parseInt(document.getElementById('humidity-input').value) || null,
+                press: parseInt(document.getElementById('pressure-input').value) || null,
+                vis: parseFloat(document.getElementById('visibility-input').value) || null,
+                cloud: parseInt(document.getElementById('cloudiness-input').value) || null,
+                uv: parseInt(document.getElementById('uv-input').value) || null,
+                precip: parseFloat(document.getElementById('precip-input').value) || null,
                 n: document.getElementById('notes-input').value.trim(),
                 ts: new Date().toISOString()
             };
             
             localStorage.setItem(`wl_${this.year}_${this.month}_${this.day}`, JSON.stringify(data));
-            this.renderCalendar();
-            this.updateStats();
-            this.checkBadges();
-            this.renderBadges();
-            this.closeModal();
-            this.showToast(this.t('toastSaved'));
+            this.renderCalendar(); this.updateStats(); this.checkBadges(); this.renderBadges();
+            this.closeModal(); this.showToast(this.t('toastSaved'));
         }
         
-        deleteRecord() {
-            if (!confirm(this.t('alertDelete'))) return;
-            localStorage.removeItem(`wl_${this.year}_${this.month}_${this.day}`);
-            this.renderCalendar();
-            this.updateStats();
-            this.renderBadges();
-            this.closeModal();
-            this.showToast(this.t('toastDeleted'));
-        }
+        deleteRecord() { if (!confirm(this.t('alertDelete'))) return; localStorage.removeItem(`wl_${this.year}_${this.month}_${this.day}`); this.renderCalendar(); this.updateStats(); this.renderBadges(); this.closeModal(); this.showToast(this.t('toastDeleted')); }
         
         getStats() {
             const dim = new Date(this.year, this.month + 1, 0).getDate();
-            let total = 0, totalTemp = 0, sunny = 0, rain = 0, windy = 0, streak = 0, maxStreak = 0;
+            let total=0, totalTemp=0, sunny=0, rain=0, windy=0, streak=0, maxStreak=0;
+            let totalHum=0, humCount=0, totalPress=0, pressCount=0;
             
-            for (let d = 1; d <= dim; d++) {
+            for (let d=1; d<=dim; d++) {
                 const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
                 if (data) {
                     total++; totalTemp += data.t;
-                    if (data.w === '☀️') sunny++;
-                    if (data.w === '🌧️') rain++;
-                    if (data.w === '🌪️' || data.ws >= 10) windy++;
+                    if (data.w==='☀️') sunny++;
+                    if (data.w==='🌧️') rain++;
+                    if (data.w==='🌪️'||data.ws>=10) windy++;
                     streak++; maxStreak = Math.max(maxStreak, streak);
+                    if (data.hum) { totalHum += data.hum; humCount++; }
+                    if (data.press) { totalPress += data.press; pressCount++; }
                 } else { streak = 0; }
             }
-            return { total, totalTemp, sunny, rain, windy, maxStreak, dim };
+            return { total, totalTemp, sunny, rain, windy, maxStreak, avgHum: humCount>0?Math.round(totalHum/humCount):null, avgPress: pressCount>0?Math.round(totalPress/pressCount):null };
         }
         
         updateStats() {
             const s = this.getStats();
             document.getElementById('stat-days').textContent = s.total;
-            document.getElementById('stat-avg-temp').textContent = s.total > 0 ? `${(s.totalTemp/s.total).toFixed(1)}°C` : '--°C';
+            document.getElementById('stat-avg-temp').textContent = s.total>0?`${(s.totalTemp/s.total).toFixed(1)}°C`:'--°C';
             document.getElementById('stat-sunny').textContent = s.sunny;
             document.getElementById('stat-windy').textContent = s.windy;
+            document.getElementById('stat-humidity').textContent = s.avgHum ? s.avgHum+'%' : '--%';
+            document.getElementById('stat-pressure').textContent = s.avgPress ? s.avgPress+' мм' : '--';
             document.getElementById('stat-streak').textContent = s.maxStreak;
         }
         
@@ -1003,29 +930,16 @@
         }
         
         showBadgePopup(b) {
-            const popup = document.createElement('div');
-            popup.className = 'badge-popup';
-            popup.setAttribute('role', 'alert');
+            const popup = document.createElement('div'); popup.className = 'badge-popup'; popup.setAttribute('role','alert');
             popup.innerHTML = `<span style="font-size:2rem;">${b.emoji}</span> ${this.lang==='uk'?b.uk:b.en}`;
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 4000);
+            document.body.appendChild(popup); setTimeout(() => popup.remove(), 4000);
             if (navigator.vibrate) navigator.vibrate([200,100,200]);
         }
         
         renderBadges() {
             const container = document.getElementById('badges-container');
-            const unlocked = this.unlockedBadges;
-            
-            if (unlocked.length === 0) {
-                container.innerHTML = `<p style="color:var(--gray-500);">${this.t('noBadges')}</p>`;
-                return;
-            }
-            
-            container.innerHTML = this.badgeDefs
-                .filter(b => unlocked.includes(b.id))
-                .map(b => `<span style="font-size:2rem;padding:5px;background:var(--gray-100);border-radius:var(--radius-md);" 
-                     title="${this.lang==='uk'?b.uk:b.en}">${b.emoji}</span>`)
-                .join('');
+            if (this.unlockedBadges.length === 0) { container.innerHTML = `<p style="color:var(--gray-500);">${this.t('noBadges')}</p>`; return; }
+            container.innerHTML = this.badgeDefs.filter(b => this.unlockedBadges.includes(b.id)).map(b => `<span style="font-size:2rem;padding:5px;background:var(--gray-100);border-radius:var(--radius-md);" title="${this.lang==='uk'?b.uk:b.en}">${b.emoji}</span>`).join('');
         }
         
         saveStudentInfo() {
@@ -1037,43 +951,46 @@
         }
         
         async detectLocation() {
-            const btn = document.getElementById('geo-btn');
-            btn.disabled = true; btn.textContent = '⏳...';
-            
+            const btn = document.getElementById('geo-btn'); btn.disabled = true; btn.textContent = '⏳...';
             try {
-                const pos = await new Promise((res, rej) => 
-                    navigator.geolocation.getCurrentPosition(res, rej, {timeout:10000}));
-                
-                const resp = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=uk`
-                );
+                const pos = await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:10000}));
+                const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=uk`);
                 const data = await resp.json();
                 const name = data.address?.city || data.address?.town || data.address?.village || 'Невідомо';
-                
                 document.getElementById('location-input').value = name;
                 document.getElementById('location-status').textContent = '✅ ' + name;
-                localStorage.setItem('wl_location', JSON.stringify({
-                    name, lat: pos.coords.latitude, lon: pos.coords.longitude
-                }));
-                
-                this.updateWeatherIframe();
-                this.showToast(this.t('toastLocation') + name);
-            } catch(err) {
-                alert(this.t('alertLocation'));
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📡 ' + this.t('geoText');
-            }
+                localStorage.setItem('wl_location', JSON.stringify({name, lat:pos.coords.latitude, lon:pos.coords.longitude}));
+                this.updateWeatherIframe(); this.showToast(this.t('toastLocation') + name);
+            } catch(err) { alert(this.t('alertLocation')); }
+            finally { btn.disabled = false; btn.textContent = '📡 ' + this.t('geoText'); }
         }
         
         updateWeatherIframe() {
             const loc = JSON.parse(localStorage.getItem('wl_location') || 'null');
             const iframe = document.getElementById('weather-iframe');
-            if (loc?.lat) {
-                iframe.src = `https://www.ventusky.com/${loc.lat.toFixed(2)}/${loc.lon.toFixed(2)}?language=${this.lang==='uk'?'uk':'en'}`;
-            } else {
-                iframe.src = `https://www.ventusky.com/49.00/31.00?language=${this.lang==='uk'?'uk':'en'}`;
-            }
+            iframe.src = loc?.lat ? `https://www.ventusky.com/${loc.lat.toFixed(2)}/${loc.lon.toFixed(2)}?language=${this.lang==='uk'?'uk':'en'}` : `https://www.ventusky.com/49.00/31.00?language=${this.lang==='uk'?'uk':'en'}`;
+        }
+        
+        openSinoptik() {
+            const loc = JSON.parse(localStorage.getItem('wl_location') || 'null');
+            const cityName = loc?.name || 'odesa';
+            // Транслітерація для URL
+            const citySlug = this.transliterate(cityName);
+            
+            document.getElementById('sinoptik-city').textContent = cityName;
+            document.getElementById('sinoptik-iframe').src = `https://sinoptik.ua/pohoda/${citySlug}`;
+            document.getElementById('sinoptik-window').hidden = false;
+            document.getElementById('sinoptik-window').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        transliterate(name) {
+            const map = {
+                'Київ':'kyiv','Киев':'kyiv','Одеса':'odesa','Одесса':'odesa','Львів':'lviv','Львов':'lviv',
+                'Харків':'kharkiv','Харьков':'kharkiv','Дніпро':'dnipro','Днепр':'dnipro',
+                'Вінниця':'vinnitsa','Полтава':'poltava','Чернігів':'chernigov',
+                'Житомир':'zhytomyr','Суми':'sumy','Черкаси':'cherkassy'
+            };
+            return map[name] || name.toLowerCase().replace(/\s+/g,'-');
         }
         
         async compareWithRealData() {
@@ -1081,27 +998,21 @@
             if (!loc?.lat) { alert(this.t('alertLocation')); return; }
             
             const btn = document.querySelector('button[onclick*="compareWithRealData"]');
-            btn.disabled = true;
-            btn.textContent = '⏳ ' + (this.lang==='uk'?'Завантажую...':'Loading...');
+            btn.disabled = true; btn.textContent = '⏳...';
             
             const start = `${this.year}-${String(this.month+1).padStart(2,'0')}-01`;
             const dim = new Date(this.year, this.month + 1, 0).getDate();
             const end = `${this.year}-${String(this.month+1).padStart(2,'0')}-${String(dim).padStart(2,'0')}`;
             
             try {
-                const resp = await fetch(
-                    `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min,weathercode,windspeed_10m_max&timezone=auto`
-                );
-                
-                if (!resp.ok) throw new Error('API status: ' + resp.status);
-                
+                const resp = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,surface_pressure_mean,weathercode,windspeed_10m_max&timezone=auto`);
+                if (!resp.ok) throw new Error('API '+resp.status);
                 const real = await resp.json();
                 let html = '', totalDiff = 0, compCount = 0;
                 
-                for (let d = 1; d <= dim; d++) {
+                for (let d=1; d<=dim; d++) {
                     const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
                     if (!data) continue;
-                    
                     const idx = d - 1;
                     if (idx >= real.daily.time.length) continue;
                     
@@ -1111,26 +1022,28 @@
                     
                     const acc = diff <= 2 ? 'good' : diff <= 5 ? 'fair' : 'poor';
                     const emoji = diff <= 2 ? '🟢' : diff <= 5 ? '🟡' : '🔴';
-                    html += `<tr><td>${d}.${this.month+1}</td><td>${data.t}°C</td><td>${realTemp.toFixed(1)}°C</td><td class="accuracy-${acc}">${emoji} ${diff.toFixed(1)}°C</td></tr>`;
+                    
+                    const realHum = real.daily.relative_humidity_2m_mean?.[idx] || '—';
+                    const realPress = real.daily.surface_pressure_mean?.[idx] || '—';
+                    
+                    html += `<tr><td>${d}.${this.month+1}</td><td>${data.t}°C</td><td>${realTemp.toFixed(1)}°C</td><td>${emoji} ${diff.toFixed(1)}°C</td><td>${data.hum||'—'}% / ${realHum}%</td><td>${data.press||'—'} / ${realPress}</td></tr>`;
                 }
                 
                 const accuracy = compCount > 0 ? Math.round((1 - totalDiff/(compCount*10)) * 100) : 0;
                 document.getElementById('stat-accuracy').textContent = accuracy + '%';
                 
                 document.getElementById('comparison-results').innerHTML = `
-                    <h3>🔬 ${this.lang==='uk'?'Порівняння з реальними даними':'Comparison with Real Data'}</h3>
+                    <h3>🔬 ${this.lang==='uk'?'Порівняння з архівом Open-Meteo':'Comparison with Open-Meteo'}</h3>
                     <table class="comparison-table">
-                        <tr><th>${this.lang==='uk'?'Дата':'Date'}</th><th>${this.lang==='uk'?'Твій запис':'Your record'}</th><th>${this.lang==='uk'?'Реальна t°':'Real temp'}</th><th>${this.lang==='uk'?'Різниця':'Difference'}</th></tr>
-                        ${html || `<tr><td colspan="4">${this.lang==='uk'?'Немає даних':'No data'}</td></tr>`}
+                        <tr><th>Дата</th><th>Ти</th><th>Real t°</th><th>Різн</th><th>Вологість (ти/real)</th><th>Тиск (ти/real)</th></tr>
+                        ${html||'<tr><td colspan="6">Немає даних</td></tr>'}
                     </table>
                     <p><strong>🎯 ${this.lang==='uk'?'Точність':'Accuracy'}: ${accuracy}%</strong></p>
                 `;
             } catch(err) {
-                document.getElementById('comparison-results').innerHTML = 
-                    `<p style="color:var(--error);">❌ ${this.lang==='uk'?'Помилка. Перевір інтернет.':'Error. Check internet.'}</p>`;
+                document.getElementById('comparison-results').innerHTML = `<p style="color:var(--error);">❌ ${this.lang==='uk'?'Помилка. Спробуй Sinoptik для порівняння!':'Error. Try Sinoptik!'}</p>`;
             } finally {
-                btn.disabled = false;
-                btn.textContent = '🔬 ' + this.t('compareText');
+                btn.disabled = false; btn.textContent = '🔬 ' + this.t('compareText');
             }
         }
         
@@ -1143,70 +1056,50 @@
             const s = this.getStats();
             
             let rows = '';
-            for (let d = 1; d <= dim; d++) {
+            for (let d=1; d<=dim; d++) {
                 const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
-                if (data) rows += `<tr><td>${d}.${this.month+1}.${this.year}</td><td><strong>${data.t}°C</strong></td><td style="font-size:1.5rem">${data.w}</td><td>${data.wd||'—'}</td><td>${data.ws||0} м/с</td><td>${data.m||'—'}</td><td>${data.n||'—'}</td></tr>`;
+                if (data) rows += `<tr><td>${d}.${this.month+1}.${this.year}</td><td><strong>${data.t}°C</strong></td><td>${data.feels||'—'}°C</td><td style="font-size:1.3rem">${data.w}</td><td>${data.wd||'—'} ${data.ws||0}м/с</td><td>${data.hum||'—'}%</td><td>${data.press||'—'}мм</td><td>${data.cloud||'—'}%</td><td>${data.precip||'0'}мм</td><td>${data.m||'—'}</td></tr>`;
             }
             
-            const html = `<!DOCTYPE html><html lang="${this.lang}"><head><meta charset="UTF-8"><title>${this.lang==='uk'?'Метеозвіт':'Weather Report'} — ${name}</title>
-            <style>@page{size:A4;margin:1.5cm}body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}
-            h1{color:#01579b;text-align:center}.info{background:#e3f2fd;padding:15px;border-radius:10px;margin:15px 0}
-            table{width:100%;border-collapse:collapse;margin:15px 0;font-size:11px}
-            th{background:#0277bd;color:white;padding:6px}td{padding:5px;border:1px solid #ddd}
-            .footer{text-align:center;color:#888;margin-top:30px;font-size:10px}
+            const html = `<!DOCTYPE html><html lang="${this.lang}"><head><meta charset="UTF-8"><title>Метеозвіт — ${name}</title>
+            <style>@page{size:A4 landscape;margin:1cm}body{font-family:Arial;max-width:100%;margin:0 auto;padding:15px;font-size:10px}
+            h1{color:#01579b;text-align:center;font-size:16px}.info{background:#e3f2fd;padding:10px;border-radius:8px;margin:10px 0;font-size:11px}
+            table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9px}
+            th{background:#0277bd;color:white;padding:4px}td{padding:3px;border:1px solid #ddd}
+            .footer{text-align:center;color:#888;margin-top:20px;font-size:8px}
             @media print{body{padding:0}}</style></head><body>
             <h1>🌤️ ${this.lang==='uk'?'Метеозвіт':'Weather Report'} ${this.avatar}</h1>
-            <div class="info"><p><strong>${this.lang==='uk'?'Учень':'Student'}:</strong> ${name}</p>
-            <p><strong>${this.lang==='uk'?'Клас':'Class'}:</strong> ${cls}</p>
-            <p><strong>${this.lang==='uk'?'Локація':'Location'}:</strong> ${locName}</p>
-            <p><strong>${this.lang==='uk'?'Період':'Period'}:</strong> ${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}</p>
-            <p><strong>${this.lang==='uk'?'Середня t°':'Avg temp'}:</strong> ${s.total>0?(s.totalTemp/s.total).toFixed(1):'—'}°C | <strong>${this.lang==='uk'?'Днів':'Days'}:</strong> ${s.total}</p></div>
-            <table><tr><th>${this.lang==='uk'?'Дата':'Date'}</th><th>t°C</th><th>${this.lang==='uk'?'Погода':'Weather'}</th><th>${this.lang==='uk'?'Вітер':'Wind'}</th><th>${this.lang==='uk'?'Швидк':'Speed'}</th><th>${this.lang==='uk'?'Настрій':'Mood'}</th><th>${this.lang==='uk'?'Нотатки':'Notes'}</th></tr>
-            ${rows||`<tr><td colspan="7" style="text-align:center;padding:20px;">${this.lang==='uk'?'Немає записів':'No records'}</td></tr>`}</table>
-            <div class="footer"><p>📋 WeatherLab НУШ v2.3 | ${new Date().toLocaleDateString(this.lang==='uk'?'uk-UA':'en-US')}</p></div></body></html>`;
+            <div class="info"><strong>${this.lang==='uk'?'Учень':'Student'}:</strong> ${name} | <strong>${this.lang==='uk'?'Клас':'Class'}:</strong> ${cls} | <strong>${this.lang==='uk'?'Локація':'Location'}:</strong> ${locName} | <strong>${this.lang==='uk'?'Період':'Period'}:</strong> ${this.lang==='uk'?this.months[this.month]:this.monthsEn[this.month]} ${this.year}</div>
+            <p><strong>${this.lang==='uk'?'Середня t°':'Avg temp'}:</strong> ${s.total>0?(s.totalTemp/s.total).toFixed(1):'—'}°C | <strong>${this.lang==='uk'?'Вологість':'Humidity'}:</strong> ${s.avgHum||'—'}% | <strong>${this.lang==='uk'?'Тиск':'Pressure'}:</strong> ${s.avgPress||'—'}мм | <strong>${this.lang==='uk'?'Днів':'Days'}:</strong> ${s.total}</p>
+            <table><tr><th>Дата</th><th>t°C</th><th>Відчув</th><th>Погода</th><th>Вітер</th><th>Волог</th><th>Тиск</th><th>Хмарн</th><th>Опади</th><th>Настрій</th></tr>
+            ${rows||'<tr><td colspan="10">Немає записів</td></tr>'}</table>
+            <div class="footer">📋 WeatherLab НУШ v2.4 | ${new Date().toLocaleDateString(this.lang==='uk'?'uk-UA':'en-US')}</div></body></html>`;
             
-            const w = window.open('', '_blank');
-            w.document.write(html);
-            w.document.close();
+            const w = window.open('', '_blank'); w.document.write(html); w.document.close();
             setTimeout(() => w.print(), 500);
         }
         
         saveReportAsFile() {
             const name = localStorage.getItem('wl_student_name') || 'student';
             const dim = new Date(this.year, this.month + 1, 0).getDate();
-            let csv = '\uFEFF' + (this.lang==='uk'?'Дата;Температура;Погода;Вітер;Швидкість;Настрій;Нотатки\n':'Date;Temperature;Weather;Wind;Speed;Mood;Notes\n');
-            
-            for (let d = 1; d <= dim; d++) {
+            let csv = '\uFEFFДата;Температура;Відчувається;Погода;Вітер;Швидкість;Пориви;Вологість;Тиск;Видимість;Хмарність;УФ;Опади;Настрій;Нотатки\n';
+            for (let d=1; d<=dim; d++) {
                 const data = JSON.parse(localStorage.getItem(`wl_${this.year}_${this.month}_${d}`) || 'null');
-                if (data) csv += `${d}.${this.month+1}.${this.year};${data.t}°C;${data.w};${data.wd||''};${data.ws||0}м/с;${data.m||''};${data.n||''}\n`;
+                if (data) csv += `${d}.${this.month+1}.${this.year};${data.t}°C;${data.feels||''}°C;${data.w};${data.wd||''};${data.ws||0}м/с;${data.gust||''};${data.hum||''}%;${data.press||''}мм;${data.vis||''}км;${data.cloud||''}%;${data.uv||''};${data.precip||''}мм;${data.m||''};${data.n||''}\n`;
             }
-            
             const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `WeatherReport_${name}_${this.months[this.month]}_${this.year}.csv`;
-            a.click();
-            this.showToast('✅ CSV ' + (this.lang==='uk'?'збережено!':'saved!'));
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `WeatherReport_${name}_${this.months[this.month]}_${this.year}.csv`; a.click();
+            this.showToast('✅ CSV збережено!');
         }
         
         printReport() { window.print(); }
-        
-        showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.setAttribute('role', 'status');
-            t.setAttribute('aria-live', 'polite');
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
+        showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
     }
     
     document.addEventListener('DOMContentLoaded', () => {
         window.app = new WeatherLabApp();
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
     });
     </script>
 </body>
